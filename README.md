@@ -58,21 +58,38 @@ The code uses `SoftwareSerial` with `inverse_logic = true` to handle this. If yo
 
 **If inverse logic doesn't resolve it**, the signals may actually be standard polarity on your controller model. The protocol was reverse-engineered from specific models, and yours may differ.
 
-## Building & Uploading
+## Building & Uploading (PlatformIO)
 
-### Arduino IDE
+This project uses [PlatformIO](https://platformio.org/) for build/upload/serial monitoring.
 
-1. Open `jarvis-desk-controller.ino` in the Arduino IDE
-2. Select **Board:** Arduino Uno
-3. Select your serial port
-4. Click Upload
+### Setup
 
-### arduino-cli
+1. Install the **PlatformIO IDE** extension in VSCode (`platformio.platformio-ide`)
+2. Open this folder in VSCode — PlatformIO detects `platformio.ini` automatically
+
+### Build, Upload & Monitor
+
+Use the PlatformIO toolbar at the bottom of VSCode, or:
 
 ```bash
-arduino-cli compile -b arduino:avr:uno .
-arduino-cli upload -b arduino:avr:uno -p /dev/ttyACM0 .
+# Build
+pio run
+
+# Upload to Arduino
+pio run --target upload
+
+# Open serial monitor (115200 baud)
+pio device monitor
+
+# Build + upload + monitor in one shot
+pio run --target upload && pio device monitor
 ```
+
+### Alternative: Arduino IDE
+
+If you prefer the Arduino IDE, copy files from `src/` and `include/` into a single
+folder named `jarvis-desk-controller/`, rename `main.cpp` → `jarvis-desk-controller.ino`,
+and open it in the Arduino IDE.
 
 ## Usage
 
