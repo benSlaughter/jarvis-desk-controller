@@ -1,8 +1,10 @@
 #include "jarvis_desk.h"
 
-JarvisDesk::JarvisDesk(SoftwareSerial& serial)
+JarvisDesk::JarvisDesk(SoftwareSerial* serial)
   : _serial(serial),
     _callback(nullptr),
+    _debugCallback(nullptr),
+    _debugEnabled(false),
     _parserState(WAIT_ADDR1),
     _rxAddress(0),
     _rxCommand(0),
@@ -15,12 +17,24 @@ JarvisDesk::JarvisDesk(SoftwareSerial& serial)
     _lastHeight(0),
     _prevHeight(0),
     _lastHeightTime(0),
-    _moving(false) {}
+    _moving(false),
+    _moveMode(MOVE_NONE),
+    _moveStartTime(0),
+    _lastMoveCmdTime(0),
+    _timeoutCallback(nullptr),
+    _moveToActive(false),
+    _moveToTarget(0),
+    _moveToStartTime(0),
+    _targetReachedCallback(nullptr) {}
+
+void JarvisDesk::setSerial(SoftwareSerial* serial) {
+  _serial = serial;
+}
 
 void JarvisDesk::begin() {
-  // SoftwareSerial with inverse_logic=true is set by the caller.
+  // SoftwareSerial baud rate / polarity is set by the caller.
   // 9600 baud, 8N1
-  _serial.begin(9600);
+  _serial->begin(9600);
   _deskState = DESK_WAKING;
   _lastWakeAttempt = millis();
   _wakeRetries = 0;
@@ -30,30 +44,105 @@ void JarvisDesk::onPacket(PacketCallback cb) {
   _callback = cb;
 }
 
+void JarvisDesk::setDebug(bool enabled) {
+  _debugEnabled = enabled;
+}
+
+bool JarvisDesk::getDebug() const {
+  return _debugEnabled;
+}
+
+void JarvisDesk::onDebugByte(DebugCallback cb) {
+  _debugCallback = cb;
+}
+
 void JarvisDesk::update() {
   // Read all available bytes from desk
-  while (_serial.available()) {
-    uint8_t b = _serial.read();
+  while (_serial->available()) {
+    uint8_t b = _serial->read();
     _lastRxTime = millis();
+    if (_debugEnabled && _debugCallback) {
+      _debugCallback(b);
+    }
     processByte(b);
   }
 
   updateConnectionState();
+  updateMoveToHeight();
+  updateContinuousMove();
 }
 
 // --- Command senders ---
 
-void JarvisDesk::raise() {
+void JarvisDesk::raiseStep() {
   sendCommand(CMD_RAISE);
 }
 
-void JarvisDesk::lower() {
+void JarvisDesk::lowerStep() {
   sendCommand(CMD_LOWER);
 }
 
+void JarvisDesk::startRaise() {
+  _moveMode = MOVE_RAISE;
+  _moveStartTime = millis();
+  _lastMoveCmdTime = 0;
+  raiseStep();  // send first command immediately
+}
+
+void JarvisDesk::startLower() {
+  _moveMode = MOVE_LOWER;
+  _moveStartTime = millis();
+  _lastMoveCmdTime = 0;
+  lowerStep();  // send first command immediately
+}
+
 void JarvisDesk::stop() {
-  // Sending no button / releasing is implicit when we stop sending
-  // raise/lower. The desk stops when it stops receiving move commands.
+  _moveMode = MOVE_NONE;
+  _moveToActive = false;
+}
+
+void JarvisDesk::onMoveTimeout(TimeoutCallback cb) {
+  _timeoutCallback = cb;
+}
+
+MovementMode JarvisDesk::getMoveMode() const {
+  return _moveMode;
+}
+
+// --- Move-to-height ---
+
+void JarvisDesk::moveToHeight(uint16_t target) {
+  _moveToTarget = target;
+  _moveToActive = true;
+  _moveToStartTime = millis();
+
+  int16_t diff = (int16_t)target - (int16_t)_lastHeight;
+  if (diff > 0) {
+    startRaise();
+  } else if (diff < 0) {
+    startLower();
+  } else {
+    // Already at target
+    _moveToActive = false;
+    if (_targetReachedCallback) {
+      _targetReachedCallback(target, true);
+    }
+    return;
+  }
+  // Keep move-to active (startRaise/startLower don't affect it)
+  _moveToActive = true;
+}
+
+bool JarvisDesk::isMovingToHeight() const {
+  return _moveToActive;
+}
+
+uint16_t JarvisDesk::getTargetHeight() const {
+  return _moveToTarget;
+}
+
+void JarvisDesk::onTargetReached(TargetReachedCallback cb) {
+  _targetReachedCallback = cb;
 }
 
 void JarvisDesk::moveToPreset(uint8_t preset) {
@@ -109,6 +198,78 @@ bool JarvisDesk::isMoving() const {
   return _moving;
 }
 
+// --- Internal: continuous movement ---
+
+void JarvisDesk::updateMoveToHeight() {
+  if (!_moveToActive) return;
+
+  unsigned long now = millis();
+
+  // Use the later of move start time or last height report as reference
+  unsigned long refTime = (_lastHeightTime > _moveToStartTime)
+                          ? _lastHeightTime : _moveToStartTime;
+
+  // Safety: no height reports for 2 seconds
+  if (now - refTime >= MOVE_TO_HEIGHT_TIMEOUT_MS) {
+    _moveToActive = false;
+    _moveMode = MOVE_NONE;
+    if (_targetReachedCallback) {
+      _targetReachedCallback(_moveToTarget, false);
+    }
+    return;
+  }
+
+  // Only evaluate position if we've received a height report since starting
+  if (_lastHeightTime <= _moveToStartTime) return;
+
+  int16_t diff = (int16_t)_lastHeight - (int16_t)_moveToTarget;
+  int16_t absDiff = (diff < 0) ? -diff : diff;
+
+  // Within tolerance — target reached
+  if (absDiff <= (int16_t)MOVE_TO_TOLERANCE) {
+    _moveToActive = false;
+    _moveMode = MOVE_NONE;
+    if (_targetReachedCallback) {
+      _targetReachedCallback(_moveToTarget, true);
+    }
+    return;
+  }
+
+  // Overshoot detection — reverse direction
+  if (_moveMode == MOVE_RAISE && diff > (int16_t)MOVE_TO_TOLERANCE) {
+    startLower();
+    _moveToActive = true;
+  } else if (_moveMode == MOVE_LOWER && diff < -(int16_t)MOVE_TO_TOLERANCE) {
+    startRaise();
+    _moveToActive = true;
+  }
+}
+
+void JarvisDesk::updateContinuousMove() {
+  if (_moveMode == MOVE_NONE) return;
+
+  unsigned long now = millis();
+
+  // Safety timeout
+  if (now - _moveStartTime >= MOVE_TIMEOUT_MS) {
+    _moveMode = MOVE_NONE;
+    if (_timeoutCallback) {
+      _timeoutCallback();
+    }
+    return;
+  }
+
+  // Send repeated commands at MOVE_REPEAT_MS interval
+  if (now - _lastMoveCmdTime >= MOVE_REPEAT_MS) {
+    _lastMoveCmdTime = now;
+    if (_moveMode == MOVE_RAISE) {
+      raiseStep();
+    } else if (_moveMode == MOVE_LOWER) {
+      lowerStep();
+    }
+  }
+}
+
 // --- Internal: send helpers ---
 
 void JarvisDesk::sendCommand(uint8_t command) {
@@ -122,7 +283,7 @@ void JarvisDesk::sendCommandWithParam(uint8_t command, uint8_t param) {
 void JarvisDesk::sendRawPacket(uint8_t command, uint8_t paramCount, const uint8_t* params) {
   uint8_t buffer[JARVIS_MAX_PACKET_SIZE];
   uint8_t len = jarvis_build_packet(buffer, JARVIS_ADDR_HANDSET, command, paramCount, params);
-  _serial.write(buffer, len);
+  _serial->write(buffer, len);
 }
 
 // --- Internal: parser state machine ---

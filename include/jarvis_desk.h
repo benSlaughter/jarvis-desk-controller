@@ -22,23 +22,49 @@ enum DeskState {
   DESK_CONNECTED
 };
 
-// --- Callback type for received packets ---
+// --- Movement modes ---
+enum MovementMode {
+  MOVE_NONE,
+  MOVE_RAISE,
+  MOVE_LOWER
+};
+
+// --- Callback types ---
 typedef void (*PacketCallback)(const JarvisPacket& pkt);
+typedef void (*TimeoutCallback)();
+typedef void (*TargetReachedCallback)(uint16_t targetHeight, bool reached);
+
+// --- Callback type for raw debug bytes ---
+typedef void (*DebugCallback)(uint8_t byte);
 
 class JarvisDesk {
 public:
-  JarvisDesk(SoftwareSerial& serial);
+  JarvisDesk(SoftwareSerial* serial);
 
   void begin();
   void update();  // call from loop()
 
+  // Swap the underlying serial port (for polarity detection)
+  void setSerial(SoftwareSerial* serial);
+
   // Set callback for decoded packets from the desk
   void onPacket(PacketCallback cb);
 
-  // --- Desk commands ---
-  void raise();
-  void lower();
+  // Debug mode: raw byte inspection
+  void setDebug(bool enabled);
+  bool getDebug() const;
+  void onDebugByte(DebugCallback cb);
+
+  // --- Continuous movement ---
+  void startRaise();
+  void startLower();
   void stop();
+  void onMoveTimeout(TimeoutCallback cb);
+  MovementMode getMoveMode() const;
+
+  // --- Single-shot commands ---
+  void raiseStep();
+  void lowerStep();
   void moveToPreset(uint8_t preset); // 1-4
   void savePreset(uint8_t preset);   // 1-4
   void requestSettings();
@@ -47,14 +73,22 @@ public:
   void setUnits(uint8_t units);      // UNITS_CM or UNITS_IN
   void sendWake();
 
+  // --- Move-to-height ---
+  void moveToHeight(uint16_t target);
+  bool isMovingToHeight() const;
+  uint16_t getTargetHeight() const;
+  void onTargetReached(TargetReachedCallback cb);
+
   // --- State ---
   DeskState getState() const;
   uint16_t getLastHeight() const;
   bool isMoving() const;
 
 private:
-  SoftwareSerial& _serial;
+  SoftwareSerial* _serial;
   PacketCallback _callback;
+  DebugCallback _debugCallback;
+  bool _debugEnabled;
 
   // Parser
   ParserState _parserState;
@@ -79,6 +113,24 @@ private:
   unsigned long _lastHeightTime;
   bool _moving;
 
+  // Continuous movement
+  MovementMode _moveMode;
+  unsigned long _moveStartTime;
+  unsigned long _lastMoveCmdTime;
+  TimeoutCallback _timeoutCallback;
+  static const unsigned long MOVE_REPEAT_MS = 100;
+  static const unsigned long MOVE_TIMEOUT_MS = 30000;
+
+  // Move-to-height
+  bool _moveToActive;
+  uint16_t _moveToTarget;
+  unsigned long _moveToStartTime;
+  TargetReachedCallback _targetReachedCallback;
+  static const uint16_t MOVE_TO_TOLERANCE = 5;
+  static const unsigned long MOVE_TO_HEIGHT_TIMEOUT_MS = 2000;
+
+  void updateContinuousMove();
+  void updateMoveToHeight();
   void sendCommand(uint8_t command);
   void sendCommandWithParam(uint8_t command, uint8_t param);
   void sendRawPacket(uint8_t command, uint8_t paramCount, const uint8_t* params);
