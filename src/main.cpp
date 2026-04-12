@@ -80,12 +80,13 @@ void onDeskPacket(const JarvisPacket& pkt) {
     Serial.print(F(")"));
   }
 
-  // Decode height for height reports and position responses
+  // Decode height for HEIGHT responses (already in real-world mm)
+  // Position presets use raw encoder values — don't convert to cm
   if (fromController && pkt.length >= 2) {
     uint16_t h = ((uint16_t)pkt.params[0] << 8) | pkt.params[1];
     switch (pkt.command) {
       case RESP_HEIGHT:
-        Serial.print(F("  height="));
+        Serial.print(F("  "));
         Serial.print(h / 10);
         Serial.print('.');
         Serial.print(h % 10);
@@ -95,13 +96,13 @@ void onDeskPacket(const JarvisPacket& pkt) {
       case RESP_POSITION_2:
       case RESP_POSITION_3:
       case RESP_POSITION_4:
+        Serial.print(F("  raw="));
+        Serial.print(h);
+        break;
       case RESP_SET_MAX:
       case RESP_SET_MIN:
         Serial.print(F("  = "));
-        Serial.print(h / 10);
-        Serial.print('.');
-        Serial.print(h % 10);
-        Serial.print(F("cm"));
+        Serial.print(h);
         break;
     }
   }

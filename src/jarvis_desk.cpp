@@ -168,8 +168,9 @@ void JarvisDesk::requestSettings() {
 }
 
 void JarvisDesk::requestHeight() {
-  // Wake the desk to trigger height reports
-  sendCommand(CMD_WAKE);
+  // Request settings — the desk responds with height among other data.
+  // CMD_WAKE (0x29) doesn't work on all controller models.
+  sendCommand(CMD_SETTINGS);
 }
 
 void JarvisDesk::requestLimits() {
