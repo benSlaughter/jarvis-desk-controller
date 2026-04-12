@@ -213,6 +213,16 @@ void processCommand(const String& cmd) {
     Serial.print(F("> Serial polarity: "));
     Serial.println(polarityInverted ? F("inverted") : F("normal"));
   }
+  else if (c == "polarity swap") {
+    polarityInverted = !polarityInverted;
+    activeDeskSerial = polarityInverted ? &deskSerialInverted : &deskSerialNormal;
+    activeDeskSerial->begin(9600);
+    activeDeskSerial->listen();
+    desk.setSerial(activeDeskSerial);
+    Serial.print(F("> Switched to "));
+    Serial.print(polarityInverted ? F("inverted") : F("normal"));
+    Serial.println(F(" polarity"));
+  }
   else if (c == "status") {
     Serial.print(F("> State: "));
     switch (desk.getState()) {
@@ -243,7 +253,8 @@ void processCommand(const String& cmd) {
     Serial.println(F("  wake        - Send wake signal"));
     Serial.println(F("  cm / in     - Set display units"));
     Serial.println(F("  debug on/off- Toggle raw hex byte output"));
-    Serial.println(F("  polarity    - Show detected serial polarity"));
+    Serial.println(F("  polarity      - Show serial polarity"));
+    Serial.println(F("  polarity swap - Toggle serial polarity"));
     Serial.println(F("  status      - Show connection state"));
     Serial.println(F("  help        - Show this message"));
   }
@@ -290,24 +301,25 @@ void setup() {
   Serial.println(F("=== Jarvis Desk Controller ==="));
   Serial.println(F("Auto-detecting serial polarity..."));
 
-  // Try inverted first (most common for Jarvis desks)
-  Serial.print(F("  Trying inverted polarity... "));
-  if (tryPolarity(&deskSerialInverted, 2000)) {
+  // Try normal first (most Jiecang desks use standard UART polarity)
+  Serial.print(F("  Trying normal polarity...   "));
+  if (tryPolarity(&deskSerialNormal, 2000)) {
     Serial.println(F("OK"));
-    activeDeskSerial = &deskSerialInverted;
-    polarityInverted = true;
+    activeDeskSerial = &deskSerialNormal;
+    polarityInverted = false;
   } else {
     Serial.println(F("no response"));
-    Serial.print(F("  Trying normal polarity...   "));
-    if (tryPolarity(&deskSerialNormal, 2000)) {
+    Serial.print(F("  Trying inverted polarity... "));
+    if (tryPolarity(&deskSerialInverted, 2000)) {
       Serial.println(F("OK"));
-      activeDeskSerial = &deskSerialNormal;
-      polarityInverted = false;
-    } else {
-      Serial.println(F("no response"));
-      Serial.println(F("  WARNING: No desk detected — defaulting to inverted"));
       activeDeskSerial = &deskSerialInverted;
       polarityInverted = true;
+    } else {
+      Serial.println(F("no response"));
+      Serial.println(F("  WARNING: No desk detected — defaulting to normal"));
+      Serial.println(F("  Use 'polarity swap' to toggle if needed"));
+      activeDeskSerial = &deskSerialNormal;
+      polarityInverted = false;
     }
   }
 
