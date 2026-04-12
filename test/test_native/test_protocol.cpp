@@ -310,7 +310,7 @@ void test_command_name_controller_unknown(void) {
 void test_command_name_controller_unk_codes(void) {
     TEST_ASSERT_EQUAL_STRING("UNK_05", jarvis_command_name(0x05, true));
     TEST_ASSERT_EQUAL_STRING("UNK_06", jarvis_command_name(0x06, true));
-    TEST_ASSERT_EQUAL_STRING("UNK_07", jarvis_command_name(0x07, true));
+    TEST_ASSERT_EQUAL_STRING("PHYS_LIMITS", jarvis_command_name(0x07, true));
 }
 
 // =====================================================================
