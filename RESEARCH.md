@@ -189,19 +189,55 @@ Tested decompiled Bluetooth app commands over RJ-12:
 **Conclusion:** BT app commands are not processed over the RJ-12 UART.
 These likely require the BT module to intercept and handle them separately.
 
+### Experiment 3: Limits Set/Clear via RJ-12 (2026-04-12)
+
+**Setting limits works:**
+- Set max height at 84.5cm via handset → `LIMITS (01)`, `SET_MAX (03 4D) = 845` ✅
+- Set min height at 84.5cm via handset → `LIMITS (10)`, `SET_MIN (03 4D) = 845` ✅
+- Matches phord's docs: 0x00=none, 0x01=max-only, 0x10=min-only, 0x11=both
+
+**Clearing limits works (protocol level):**
+- `raw 23 01` (clear max) → controller responds `LIMITS (00)` ✅
+- `raw 23 02` (clear min) → controller responds `LIMITS (00)` ✅
+
+**⚠️ CRITICAL WARNING — LIMITS INCIDENT:**
+After setting min AND max to the same height (84.5cm) and then clearing them
+via RJ-12, the desk became **stuck and unable to move**. The controller reported
+`LIMITS (00)` (cleared), but the desk refused all movement commands — both from
+the Arduino AND from the handset. The handset menu was still accessible but
+movement was completely locked out.
+
+**Resolution required:** Power cycling the desk (unplugging from wall power).
+
+**Lesson learned:** Setting min=max to the same height creates a "zero range"
+condition that may put the controller into a safety lockout state that persists
+even after the limits are cleared via protocol commands. **Never set min and max
+to the same height.** The controller may need a full power cycle to recover.
+
+**Also confirmed:**
+- Anti-collision sensitivity change: NOT visible in any RJ-12 query (RJ-45 only)
+- Lock/unlock: NOT visible in any RJ-12 query (handset-local feature)
+- Screen/button brightness: handset-local, no protocol traffic
+
+### Experiment 4: Command Scan (2026-04-12)
+
+Scanned ~40 undocumented command codes across ranges 0x0A–0x4A, 0x80–0x93.
+**No new responses found.** The desk controller's RJ-12 command set appears
+to be fully mapped. Brightness controls are handset-local.
+
 ### Handset Menu Options Mapping
 
 The touchpanel handset has these menu options. Mapping to known protocol commands:
 
 | Menu Option | Likely Command | Status |
 |-------------|---------------|--------|
-| Lock/unlock | **0x1F** (we got 0x00 = unlocked) | ✅ Mapped |
+| Lock/unlock | Handset-only (no protocol change detected) | 🖥️ Local |
 | Max height | 0x21 (SET_MAX) | Known |
 | Min height | 0x22 (SET_MIN) | Known |
 | Units | 0x0E (SET_UNITS) — only works from handset | Known |
-| Anti-collision | 0x1D (COLL_SENS) | Known |
-| Screen brightness | **UNKNOWN** — undocumented! | 🆕 |
-| Button brightness | **UNKNOWN** — undocumented! | 🆕 |
+| Anti-collision | 0x1D (COLL_SENS) — not readable on RJ-12 | Known |
+| Screen brightness | Handset-only (no protocol change detected) | 🖥️ Local |
+| Button brightness | Handset-only (no protocol change detected) | 🖥️ Local |
 | Memory preset mode | 0x19 (MEM_MODE) | Known |
 | Calibrate height | 0x91 (CALIBRATE) — DANGER | Known |
 
