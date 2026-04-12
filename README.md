@@ -52,11 +52,9 @@ The 1kΩ resistors protect both the Arduino and the desk controller from shorts,
 
 ## Serial Signal Notes
 
-The desk uses **5V logic with pull-up resistors** — a "mark" (idle/1) is HIGH, and data is sent by pulling lines LOW. This is **inverted** compared to standard TTL UART.
+Live testing on a Jiecang JCB36N2CA (Fully Jarvis) confirmed **normal UART polarity** — standard 9600/8N1 with no inversion needed. Earlier documentation suggested inverted logic, but this was not the case on the tested controller.
 
-The code uses `SoftwareSerial` with `inverse_logic = true` to handle this. If you find you're receiving garbage data, this is the first thing to verify — try toggling the inverse logic flag.
-
-**If inverse logic doesn't resolve it**, the signals may actually be standard polarity on your controller model. The protocol was reverse-engineered from specific models, and yours may differ.
+The code uses `SoftwareSerial` with `inverse_logic = false` (standard polarity). If you get garbage data, try toggling this flag — some controller models may differ.
 
 ## Building & Uploading (PlatformIO)
 
@@ -123,13 +121,54 @@ Waking desk...
 
 ## Protocol Reference
 
-- **UART:** 9600 baud, 8N1, inverted logic
+- **UART:** 9600 baud, 8N1, normal polarity (not inverted)
 - **Packets:** `[addr][addr][cmd][len][params...][checksum][0x7E]`
 - **Handset address:** `0xF1 0xF1`
 - **Controller address:** `0xF2 0xF2`
 - **Checksum:** Low byte of `(cmd + len + params...)`, i.e. `& 0xFF`
 
 Full protocol documentation: https://github.com/phord/Jarvis
+
+## Protocol Discoveries (Live Testing)
+
+Tested on a **Jiecang JCB36N2CA** (Fully Jarvis, RJ-12 port). The RJ-12 interface works standalone — no handset required.
+
+### Confirmed Commands (Handset → Desk)
+
+| Cmd  | Name       | Params     | Response                  | Notes                                              |
+|------|------------|------------|---------------------------|----------------------------------------------------|
+| 0x01 | RAISE      | 0          | HEIGHT stream             | Continuous raise when sent repeatedly              |
+| 0x02 | LOWER      | 0          | HEIGHT stream             | Continuous lower when sent repeatedly              |
+| 0x05 | MOVE_1     | 0          | HEIGHT stream             | Moves to preset 1, auto-stops                      |
+| 0x06 | MOVE_2     | 0          | HEIGHT stream             | Moves to preset 2, auto-stops                      |
+| 0x07 | SETTINGS   | 0          | POS_1–4 + HEIGHT          | Returns all 4 presets and current height            |
+| 0x0C | PHYS_LIMITS| 0          | 0x07 (HI HI LO LO)       | Physical motion limits: max/min in mm              |
+| 0x1B | GOTO_HEIGHT| 2 (HI, LO)| 0x1B echo + HEIGHT stream | **Native goto-height.** Desk handles accel/decel/stop |
+| 0x20 | LIMITS     | 0          | 0x20 (00)                 | User-set limits bitmask. 0x00 = none set           |
+| 0x27 | MOVE_3     | 0          | HEIGHT stream             | Moves to preset 3, auto-stops                      |
+| 0x28 | MOVE_4     | 0          | HEIGHT stream             | Moves to preset 4, auto-stops                      |
+| 0x29 | WAKE       | 0          | none (display only)       | Wakes display. No data response on RJ-12           |
+| 0x2B | STOP       | 0          | none                      | Stops all movement immediately                     |
+
+### Controller Responses
+
+| Resp | Name       | Params | Meaning                                               |
+|------|------------|--------|-------------------------------------------------------|
+| 0x01 | HEIGHT     | 3      | {P0,P1} = height mm, P2 = flags (always 0x0F here)    |
+| 0x07 | PHYS_LIMITS| 4      | {P0,P1} = max mm, {P2,P3} = min mm                    |
+| 0x1B | GOTO_ACK   | 2      | Echoes target height                                   |
+| 0x20 | LIMITS     | 1      | Bitmask of user-set limits                             |
+| 0x25–0x28 | POS_1–4 | 2   | Raw encoder value (NOT display mm)                     |
+
+### Key Observations
+
+- **Normal UART polarity** — standard 9600/8N1, no inversion needed.
+- **GOTO_HEIGHT (0x1B)** is the cleanest move method — desk handles acceleration, deceleration, and auto-stop.
+- **STOP (0x2B)** halts movement immediately. ESPHome uses wake + stop as an init sequence.
+- **Preset values** are raw encoder positions, not display millimeters.
+- **Height offset:** Display height has a ~2.4 cm offset from physical (tape-measure) height.
+- **Physical limits** on tested unit: 76.5–125.3 cm reported, ~74.1–122.9 cm actual.
+- **No-response commands:** 0x0E (UNITS), 0x19 (MEM_MODE), 0x1D (COLL_SENS) — these are setters that likely need parameters, or are RJ-45 only.
 
 ## RJ-12 vs RJ-45
 
@@ -144,7 +183,7 @@ On RJ-12, some responses differ:
 | Problem | Try |
 |---------|-----|
 | No response from desk | Check GND connection. Try `wake` command repeatedly. |
-| Garbage data | Toggle `inverse_logic` in the SoftwareSerial constructor (true ↔ false). |
+| Garbage data | Toggle `inverse_logic` in the SoftwareSerial constructor. Normal polarity (false) confirmed on JCB36N2CA. |
 | Partial/corrupt packets | Check series resistors are connected. Reduce Serial.print debug output. |
 | Desk doesn't move | The raise/lower commands send a single step. You may need to send repeatedly. |
 
