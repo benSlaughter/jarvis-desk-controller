@@ -212,10 +212,144 @@ Per the phord docs, these are RJ-45 only:
 
 ---
 
+## Research Findings (2026-04-12)
+
+Compiled from GitHub repos, ESPHome components, Home Assistant community,
+Jarvis issues/discussions, and a Jiecang BT app decompile.
+
+### New Commands Found (from BT app decompile — Jarvis issue #33)
+
+| Cmd | Name | Params | Notes |
+|-----|------|--------|-------|
+| 0xA0 | PATCH | ? | From Jiecang BT app. Purpose unknown |
+| 0xA2 | FETCH_STAND_TIME | ? | Query standing time statistics |
+| 0xA6 | FETCH_STAND_TIME (alt) | ? | Alternative stand time query |
+| 0xAA | FETCH_ALL_TIME | ? | Query all usage time statistics |
+| 0xAD | SET_MEMORY_HEIGHT | ? | Variant-dependent — alternative preset save? |
+
+**Source:** Decompiled Jiecang Bluetooth app `Command.kt`, referenced in
+[phord/Jarvis#33](https://github.com/phord/Jarvis/issues/33).
+
+### Bluetooth Protocol Details
+
+The Jiecang BLE module uses the same UART frame format over Bluetooth:
+- **BLE Service:** `0xFE60`
+- **BLE Characteristics:** `0xFE61` (write) / `0xFE62` (notify)
+- **Module:** Lierda LSD4BT-E95ASTD001
+- Commands are the same `F1 F1 cmd len params checksum 7E` packets,
+  often sent twice for reliability over BLE
+- The RJ-12 port is literally the BT module's UART connection —
+  we're speaking the same protocol the Bluetooth add-on would
+
+**Source:** [pkg/jiecang/jiecang.go](https://github.com/phord/Jarvis/issues/33)
+in a Go implementation referenced in the discussion.
+
+### Preset Calibration Formula
+
+From [phord/Jarvis#21](https://github.com/phord/Jarvis/issues/21):
+```
+height_mm = offset + raw_encoder_value * 0.0642
+```
+This explains why our preset values (5328, 5616, 12187, 14065) don't directly
+correspond to display mm. The controller applies an offset and a scaling factor
+to convert raw encoder ticks to display height.
+
+**Verification with our data:**
+```
+POS_1 raw=5328, display=77.4cm (774mm)
+POS_2 raw=5616, display=~78.8cm (788mm)
+
+Difference: 5616-5328 = 288 raw ticks → 788-774 = 14mm
+Scale: 14/288 = 0.0486 mm/tick (close to 0.0642 but not exact)
+```
+The formula may vary by controller model or our offset may differ.
+
+### HEIGHT Response P2 Byte
+
+Still unresolved across all sources:
+- Our controller: always `0x0F`
+- phord's controller: saw `0x07` and `0x0F`
+- No source has decoded this byte
+
+**Theories:**
+- Bit flags for units/mode (0x07 = 0b0111, 0x0F = 0b1111)?
+- Controller feature/capability mask?
+- Movement state indicator?
+
+**Experiment to try:** Change units to inches (`raw 0E 01`) and check if P2 changes.
+
+### Still Unknown Commands
+
+| Cmd/Resp | Our Data | Other Data | Best Guess |
+|----------|----------|------------|------------|
+| 0x08→0x05 | FF FF | 00 00 or FF FF | Possibly "stored error code" or "last event" — FF FF = none |
+| 0x09→0x06 | 01 | 01 | Possibly "controller status" or "protocol version" |
+| 0x1C→0x1C | 0x35 (53) | 0x0A (10) | Firmware version or feature capability flags |
+| 0x1F→0x1F | 0x00 | 0x00 | Always 0x00 — possibly "child lock" or reserved |
+
+### Alternative Protocol: JCB35N2 (Simple 2-Button Handset)
+
+The JCB35N2 controller (used with basic up/down handsets) uses a completely
+different 4-byte protocol:
+```
+0x01 0x01 0x01 <height_byte>    (during movement)
+0x01 0x05 0x01 0xAA             (movement ended)
+```
+Height byte: each unit ≈ 0.1 inches.
+Calibration: `raw_to_inches = (val - min_raw) * 0.1 + min_inches`
+
+**Source:** [auchter/esphome-jcb35n2](https://github.com/auchter/esphome-jcb35n2)
+
+Some controllers support BOTH protocols and may switch between them.
+
+### RJ-12 5th Wire (Pin 1 or 6)
+
+From Jarvis #33: the BT adapter's 5th wire is labeled `BKG` and measured
+at 3.3V. Speculation it stands for "background" or "backlight" — possibly
+a signal to control the handset display backlight.
+
+---
+
+## Recommendations: Where to Go Next
+
+### Safe Experiments (read-only or reversible)
+1. **Decode HEIGHT P2 byte** — Change units to inches (`raw 0E 01`), get
+   height report, see if P2 changes. Change back with `raw 0E 00`.
+2. **Probe 0x08 after movement** — Send `raw 08` right after the desk moves
+   to see if the FF FF changes (error/event log theory).
+3. **Try BT app commands** — Send `raw A0`, `raw A2`, `raw AA` to see if
+   the controller responds (stand time statistics would be cool!).
+4. **Scan for undocumented commands** — Systematically send `raw 0A`,
+   `raw 0B`, `raw 0D`, `raw 10`–`raw 18`, `raw 1A`, `raw 1E`, `raw 24`,
+   `raw 2A`, `raw 30`–`raw 40` and log any responses.
+
+### Useful Features to Implement
+5. **Native goto-height in CLI** — ✅ Done! Test with `goto 802`.
+6. **Height offset calibration** — Add a user-configurable offset (-24mm)
+   so displayed heights match real tape-measure heights.
+7. **Stand time tracking** — If 0xA2/0xAA commands work, display sit/stand
+   statistics.
+8. **Preset management via protocol** — Save/recall presets using real
+   display heights, with the encoder calibration formula.
+
+### Ambitious Goals
+9. **WiFi/BLE bridge** — Port to ESP32, expose as BLE device or MQTT client
+   for Home Assistant integration.
+10. **Sit/stand reminder** — Track time at height and send alerts.
+11. **Contribute findings upstream** — Open a discussion on phord/Jarvis
+    with our GOTO_HEIGHT, STOP, and physical limits discoveries.
+
+---
+
 ## Tools & Resources
 
 - **Protocol docs:** https://github.com/phord/Jarvis
-- **ESPHome component:** https://github.com/Rocka84/esphome_components/tree/master/components/jiecang_desk_controller
+- **ESPHome Jiecang component:** https://github.com/Rocka84/esphome_components/tree/master/components/jiecang_desk_controller
+- **ESPHome JCB35N2 component:** https://github.com/auchter/esphome-jcb35n2
+- **Loctek/Flexispot controller:** https://github.com/iMicknl/LoctekMotion_IoT
 - **Jiecang reverse engineering:** https://gitlab.com/pimp-my-desk/desk-control/jiecang-reverse-engineering
-- **Community discussion:** https://community.home-assistant.io/t/desky-standing-desk-esphome-works-with-desky-uplift-jiecang-assmann-others/383790
-- **JCB35N2 protocol (different model):** https://github.com/phord/Jarvis/discussions/4
+- **Community discussion (HA):** https://community.home-assistant.io/t/desky-standing-desk-esphome-works-with-desky-uplift-jiecang-assmann-others/383790
+- **BT app decompile & extras:** https://github.com/phord/Jarvis/issues/33
+- **Preset calibration formula:** https://github.com/phord/Jarvis/issues/21
+- **JCB35N2 protocol discussion:** https://github.com/phord/Jarvis/discussions/4
+- **RJ-12/RJ-45 protocol split:** https://github.com/ssieb/esphome_components/issues/40
