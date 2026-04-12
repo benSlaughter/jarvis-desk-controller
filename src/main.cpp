@@ -80,11 +80,30 @@ void onDeskPacket(const JarvisPacket& pkt) {
     Serial.print(F(")"));
   }
 
-  // Decode height for height reports
-  if (fromController && pkt.command == RESP_HEIGHT) {
-    uint16_t h = jarvis_decode_height(pkt);
-    Serial.print(F("  height="));
-    Serial.print(h);
+  // Decode height for height reports and position responses
+  if (fromController && pkt.length >= 2) {
+    uint16_t h = ((uint16_t)pkt.params[0] << 8) | pkt.params[1];
+    switch (pkt.command) {
+      case RESP_HEIGHT:
+        Serial.print(F("  height="));
+        Serial.print(h / 10);
+        Serial.print('.');
+        Serial.print(h % 10);
+        Serial.print(F("cm"));
+        break;
+      case RESP_POSITION_1:
+      case RESP_POSITION_2:
+      case RESP_POSITION_3:
+      case RESP_POSITION_4:
+      case RESP_SET_MAX:
+      case RESP_SET_MIN:
+        Serial.print(F("  = "));
+        Serial.print(h / 10);
+        Serial.print('.');
+        Serial.print(h % 10);
+        Serial.print(F("cm"));
+        break;
+    }
   }
 
   Serial.println();
