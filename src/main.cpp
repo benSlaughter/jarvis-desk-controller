@@ -325,6 +325,50 @@ void processCommand(const String& cmd) {
       Serial.println(F("Usage: raw <cmd> [params...] (hex, e.g., raw 1B 03 06)"));
     }
   }
+  else if (c == "scan") {
+    Serial.println(F("=== SCAN: Querying all known read commands ==="));
+    // Array of {cmd, name} pairs for all known query commands
+    static const uint8_t scanCmds[] = {
+      0x07, // SETTINGS (returns POS_1-4 + HEIGHT)
+      0x08, // UNK_08 → resp 0x05
+      0x09, // UNK_09 → resp 0x06
+      0x0C, // PHYS_LIMITS → resp 0x07
+      0x1C, // UNK_1C → resp 0x1C
+      0x1F, // UNK_1F (lock?) → resp 0x1F
+      0x20, // LIMITS → resp 0x20
+    };
+    static const char* const scanNames[] = {
+      "SETTINGS(07)",
+      "UNK_08",
+      "UNK_09",
+      "PHYS_LIMITS(0C)",
+      "UNK_1C",
+      "UNK_1F/LOCK?(1F)",
+      "LIMITS(20)",
+    };
+    static const uint8_t scanCount = sizeof(scanCmds) / sizeof(scanCmds[0]);
+
+    for (uint8_t i = 0; i < scanCount; i++) {
+      Serial.print(F("--- "));
+      Serial.print(scanNames[i]);
+      Serial.println(F(" ---"));
+      uint8_t buffer[JARVIS_MAX_PACKET_SIZE];
+      uint8_t len = jarvis_build_packet(buffer, JARVIS_ADDR_HANDSET, scanCmds[i], 0, nullptr);
+      activeDeskSerial->write(buffer, len);
+      // Wait for response — poll for up to 500ms
+      unsigned long start = millis();
+      bool gotResponse = false;
+      while (millis() - start < 500) {
+        desk.update();
+        if (millis() - start > 50 && !activeDeskSerial->available() && gotResponse) break;
+        if (activeDeskSerial->available()) gotResponse = true;
+      }
+      if (!gotResponse) {
+        Serial.println(F("  (no response)"));
+      }
+    }
+    Serial.println(F("=== SCAN COMPLETE ==="));
+  }
   else if (c == "help" || c == "?") {
     Serial.println(F("Commands:"));
     Serial.println(F("  up/raise    - Raise desk (continuous)"));
@@ -343,6 +387,7 @@ void processCommand(const String& cmd) {
     Serial.println(F("  polarity      - Show serial polarity"));
     Serial.println(F("  polarity swap - Toggle serial polarity"));
     Serial.println(F("  raw <hex>     - Send raw command (e.g., raw 0C)"));
+    Serial.println(F("  scan          - Query all known read commands"));
     Serial.println(F("  status      - Show connection state"));
     Serial.println(F("  help        - Show this message"));
   }
