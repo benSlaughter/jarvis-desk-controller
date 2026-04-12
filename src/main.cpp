@@ -92,6 +92,13 @@ void onDeskPacket(const JarvisPacket& pkt) {
         Serial.print(h % 10);
         Serial.print(F("cm"));
         break;
+      case RESP_GOTO_HEIGHT:
+        Serial.print(F("  target="));
+        Serial.print(h / 10);
+        Serial.print('.');
+        Serial.print(h % 10);
+        Serial.print(F("cm"));
+        break;
       case RESP_POSITION_1:
       case RESP_POSITION_2:
       case RESP_POSITION_3:
@@ -105,6 +112,17 @@ void onDeskPacket(const JarvisPacket& pkt) {
         Serial.print(h);
         break;
     }
+  }
+
+  // Decode physical limits (4-byte response)
+  if (fromController && pkt.command == RESP_PHYS_LIMITS && pkt.length >= 4) {
+    uint16_t pmin = ((uint16_t)pkt.params[0] << 8) | pkt.params[1];
+    uint16_t pmax = ((uint16_t)pkt.params[2] << 8) | pkt.params[3];
+    Serial.print(F("  min="));
+    Serial.print(pmin);
+    Serial.print(F("mm max="));
+    Serial.print(pmax);
+    Serial.print(F("mm"));
   }
 
   Serial.println();
@@ -143,11 +161,7 @@ void processCommand(const String& cmd) {
     desk.startLower();
   }
   else if (c == "stop") {
-    if (desk.isMovingToHeight()) {
-      Serial.println(F("> Stopping move-to-height"));
-    } else {
-      Serial.println(F("> Stopping movement"));
-    }
+    Serial.println(F("> Sending STOP to desk and clearing internal state"));
     desk.stop();
   }
   else if (c == "1") {
@@ -188,11 +202,15 @@ void processCommand(const String& cmd) {
       Serial.println(F("Usage: goto <height> (e.g., goto 1000)"));
     } else {
       uint16_t target = (uint16_t)val;
-      Serial.print(F("> Moving to "));
+      Serial.print(F("> Native goto "));
       Serial.print(target);
-      Serial.print(F("mm (currently at "));
+      Serial.print(F("mm ("));
+      Serial.print(target / 10);
+      Serial.print('.');
+      Serial.print(target % 10);
+      Serial.print(F("cm) from "));
       Serial.print(desk.getLastHeight());
-      Serial.println(F("mm)"));
+      Serial.println(F("mm"));
       desk.moveToHeight(target);
     }
   }
@@ -207,6 +225,10 @@ void processCommand(const String& cmd) {
   else if (c == "limits") {
     Serial.println(F("> Requesting limits"));
     desk.requestLimits();
+  }
+  else if (c == "physlimits") {
+    Serial.println(F("> Requesting physical limits"));
+    desk.requestPhysicalLimits();
   }
   else if (c == "wake") {
     Serial.println(F("> Sending wake"));
@@ -258,23 +280,69 @@ void processCommand(const String& cmd) {
       Serial.print(F("> Move-to target: "));
       Serial.println(desk.getTargetHeight());
     }
+    if (desk.hasPhysicalLimits()) {
+      Serial.print(F("> Physical limits: "));
+      Serial.print(desk.getPhysicalMin());
+      Serial.print(F("mm - "));
+      Serial.print(desk.getPhysicalMax());
+      Serial.println(F("mm"));
+    }
+  }
+  else if (c.startsWith("raw ")) {
+    // Send raw command with optional hex params: "raw 0C" or "raw 1B 03 06"
+    // Parse command byte
+    const char* p = c.c_str() + 4;
+    char* end;
+    long cmdVal = strtol(p, &end, 16);
+    if (cmdVal > 0 && cmdVal <= 0xFF) {
+      uint8_t cmd = (uint8_t)cmdVal;
+      // Parse optional param bytes
+      uint8_t params[JARVIS_MAX_PARAMS];
+      uint8_t paramCount = 0;
+      p = end;
+      while (paramCount < JARVIS_MAX_PARAMS && *p) {
+        long pv = strtol(p, &end, 16);
+        if (end == p) break;
+        params[paramCount++] = (uint8_t)pv;
+        p = end;
+      }
+      Serial.print(F("> Sending raw 0x"));
+      if (cmd < 0x10) Serial.print('0');
+      Serial.print(cmd, HEX);
+      if (paramCount > 0) {
+        Serial.print(F(" params:"));
+        for (uint8_t i = 0; i < paramCount; i++) {
+          Serial.print(' ');
+          if (params[i] < 0x10) Serial.print('0');
+          Serial.print(params[i], HEX);
+        }
+      }
+      Serial.println();
+      uint8_t buffer[JARVIS_MAX_PACKET_SIZE];
+      uint8_t len = jarvis_build_packet(buffer, JARVIS_ADDR_HANDSET, cmd, paramCount, params);
+      activeDeskSerial->write(buffer, len);
+    } else {
+      Serial.println(F("Usage: raw <cmd> [params...] (hex, e.g., raw 1B 03 06)"));
+    }
   }
   else if (c == "help" || c == "?") {
     Serial.println(F("Commands:"));
     Serial.println(F("  up/raise    - Raise desk (continuous)"));
     Serial.println(F("  down/lower  - Lower desk (continuous)"));
-    Serial.println(F("  stop        - Stop movement"));
-    Serial.println(F("  goto <mm>   - Move to specific height (mm)"));
+    Serial.println(F("  stop        - Stop movement (sends STOP to desk)"));
+    Serial.println(F("  goto <mm>   - Move to height (native goto, desk auto-stops)"));
     Serial.println(F("  1/2/3/4     - Move to preset"));
     Serial.println(F("  save1..4    - Save current height to preset"));
     Serial.println(F("  height      - Request current height"));
     Serial.println(F("  settings    - Request all settings"));
     Serial.println(F("  limits      - Request limit settings"));
+    Serial.println(F("  physlimits  - Request physical limits"));
     Serial.println(F("  wake        - Send wake signal"));
     Serial.println(F("  cm / in     - Set display units"));
     Serial.println(F("  debug on/off- Toggle raw hex byte output"));
     Serial.println(F("  polarity      - Show serial polarity"));
     Serial.println(F("  polarity swap - Toggle serial polarity"));
+    Serial.println(F("  raw <hex>     - Send raw command (e.g., raw 0C)"));
     Serial.println(F("  status      - Show connection state"));
     Serial.println(F("  help        - Show this message"));
   }

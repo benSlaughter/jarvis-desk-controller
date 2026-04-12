@@ -70,8 +70,12 @@ public:
   void requestSettings();
   void requestHeight();
   void requestLimits();
+  void requestPhysicalLimits();
   void setUnits(uint8_t units);      // UNITS_CM or UNITS_IN
   void sendWake();
+
+  // --- Native goto ---
+  void gotoHeight(uint16_t targetMm);
 
   // --- Move-to-height ---
   void moveToHeight(uint16_t target);
@@ -83,6 +87,9 @@ public:
   DeskState getState() const;
   uint16_t getLastHeight() const;
   bool isMoving() const;
+  uint16_t getPhysicalMin() const;
+  uint16_t getPhysicalMax() const;
+  bool hasPhysicalLimits() const;
 
 private:
   SoftwareSerial* _serial;
@@ -112,6 +119,11 @@ private:
   uint16_t _prevHeight;
   unsigned long _lastHeightTime;
   bool _moving;
+
+  // Physical limits
+  uint16_t _physicalMin;
+  uint16_t _physicalMax;
+  bool _hasPhysicalLimits;
 
   // Continuous movement
   MovementMode _moveMode;

@@ -52,9 +52,10 @@ const char* jarvis_command_name(uint8_t command, bool fromController) {
       case RESP_POSITION_3: return "POS_3";
       case RESP_POSITION_4: return "POS_4";
       case RESP_RESET:      return "RESET";
+      case RESP_PHYS_LIMITS: return "PHYS_LIMITS";
+      case RESP_GOTO_HEIGHT: return "GOTO_HEIGHT";
       case 0x05:            return "UNK_05";
       case 0x06:            return "UNK_06";
-      case 0x07:            return "UNK_07";
       default:              return "UNKNOWN";
     }
   } else {
@@ -78,6 +79,9 @@ const char* jarvis_command_name(uint8_t command, bool fromController) {
       case CMD_MOVE_3:      return "MOVE_3";
       case CMD_MOVE_4:      return "MOVE_4";
       case CMD_WAKE:        return "WAKE";
+      case CMD_STOP:        return "STOP";
+      case CMD_PHYS_LIMITS: return "PHYS_LIMITS";
+      case CMD_GOTO_HEIGHT: return "GOTO_HEIGHT";
       case CMD_CALIBRATE:   return "CALIBRATE";
       default:              return "UNKNOWN";
     }

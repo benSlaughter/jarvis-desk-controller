@@ -18,6 +18,9 @@ JarvisDesk::JarvisDesk(SoftwareSerial* serial)
     _prevHeight(0),
     _lastHeightTime(0),
     _moving(false),
+    _physicalMin(0),
+    _physicalMax(0),
+    _hasPhysicalLimits(false),
     _moveMode(MOVE_NONE),
     _moveStartTime(0),
     _lastMoveCmdTime(0),
@@ -97,6 +100,7 @@ void JarvisDesk::startLower() {
 }
 
 void JarvisDesk::stop() {
+  sendCommand(CMD_STOP);
   _moveMode = MOVE_NONE;
   _moveToActive = false;
 }
@@ -111,26 +115,18 @@ MovementMode JarvisDesk::getMoveMode() const {
 
 // --- Move-to-height ---
 
+void JarvisDesk::gotoHeight(uint16_t targetMm) {
+  uint8_t params[2] = { (uint8_t)(targetMm >> 8), (uint8_t)(targetMm & 0xFF) };
+  sendRawPacket(CMD_GOTO_HEIGHT, 2, params);
+}
+
 void JarvisDesk::moveToHeight(uint16_t target) {
   _moveToTarget = target;
   _moveToActive = true;
   _moveToStartTime = millis();
 
-  int16_t diff = (int16_t)target - (int16_t)_lastHeight;
-  if (diff > 0) {
-    startRaise();
-  } else if (diff < 0) {
-    startLower();
-  } else {
-    // Already at target
-    _moveToActive = false;
-    if (_targetReachedCallback) {
-      _targetReachedCallback(target, true);
-    }
-    return;
-  }
-  // Keep move-to active (startRaise/startLower don't affect it)
-  _moveToActive = true;
+  // Use native goto — desk handles movement and auto-stops
+  gotoHeight(target);
 }
 
 bool JarvisDesk::isMovingToHeight() const {
@@ -177,6 +173,10 @@ void JarvisDesk::requestLimits() {
   sendCommand(CMD_LIMITS);
 }
 
+void JarvisDesk::requestPhysicalLimits() {
+  sendCommand(CMD_PHYS_LIMITS);
+}
+
 void JarvisDesk::setUnits(uint8_t units) {
   sendCommandWithParam(CMD_UNITS, units);
 }
@@ -197,6 +197,18 @@ uint16_t JarvisDesk::getLastHeight() const {
 
 bool JarvisDesk::isMoving() const {
   return _moving;
+}
+
+uint16_t JarvisDesk::getPhysicalMin() const {
+  return _physicalMin;
+}
+
+uint16_t JarvisDesk::getPhysicalMax() const {
+  return _physicalMax;
+}
+
+bool JarvisDesk::hasPhysicalLimits() const {
+  return _hasPhysicalLimits;
 }
 
 // --- Internal: continuous movement ---
@@ -226,7 +238,7 @@ void JarvisDesk::updateMoveToHeight() {
   int16_t diff = (int16_t)_lastHeight - (int16_t)_moveToTarget;
   int16_t absDiff = (diff < 0) ? -diff : diff;
 
-  // Within tolerance — target reached
+  // Within tolerance — target reached (desk auto-stops with native goto)
   if (absDiff <= (int16_t)MOVE_TO_TOLERANCE) {
     _moveToActive = false;
     _moveMode = MOVE_NONE;
@@ -234,15 +246,6 @@ void JarvisDesk::updateMoveToHeight() {
       _targetReachedCallback(_moveToTarget, true);
     }
     return;
-  }
-
-  // Overshoot detection — reverse direction
-  if (_moveMode == MOVE_RAISE && diff > (int16_t)MOVE_TO_TOLERANCE) {
-    startLower();
-    _moveToActive = true;
-  } else if (_moveMode == MOVE_LOWER && diff < -(int16_t)MOVE_TO_TOLERANCE) {
-    startRaise();
-    _moveToActive = true;
   }
 }
 
@@ -379,6 +382,16 @@ void JarvisDesk::handlePacket(const JarvisPacket& pkt) {
       _lastHeight = jarvis_decode_height(pkt);
       _lastHeightTime = millis();
       _moving = (_lastHeight != _prevHeight);
+    }
+
+    if (pkt.command == RESP_GOTO_HEIGHT && pkt.length >= 2) {
+      // Desk echoes target height — just acknowledge
+    }
+
+    if (pkt.command == RESP_PHYS_LIMITS && pkt.length >= 4) {
+      _physicalMin = ((uint16_t)pkt.params[0] << 8) | pkt.params[1];
+      _physicalMax = ((uint16_t)pkt.params[2] << 8) | pkt.params[3];
+      _hasPhysicalLimits = true;
     }
 
     // Any valid response from controller means we're connected

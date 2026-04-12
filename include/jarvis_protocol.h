@@ -33,12 +33,17 @@
 #define CMD_PROGMEM_4   0x26
 #define CMD_MOVE_3      0x27
 #define CMD_MOVE_4      0x28
+#define CMD_PHYS_LIMITS 0x0C
+#define CMD_GOTO_HEIGHT 0x1B
 #define CMD_WAKE        0x29
+#define CMD_STOP        0x2B
 #define CMD_CALIBRATE   0x91
 
 // --- Desk Responses (sent FROM the desk controller) ---
 #define RESP_HEIGHT     0x01
+#define RESP_PHYS_LIMITS 0x07
 #define RESP_UNITS      0x0E
+#define RESP_GOTO_HEIGHT 0x1B
 #define RESP_MEM_MODE   0x19
 #define RESP_COLL_SENS  0x1D
 #define RESP_LIMITS     0x20
