@@ -156,16 +156,73 @@ the display and doesn't stop movement or trigger data responses.
 
 ---
 
+## Experiment Results
+
+### Experiment 1: HEIGHT P2 vs Units (2026-04-12)
+
+Changed display units via the handset controller and compared HEIGHT responses.
+
+| Mode | HEIGHT P0,P1 | HEIGHT P2 | Conversion |
+|------|-------------|-----------|------------|
+| CM | 03 07 (775) | **0x0F** | 77.5cm |
+| Inches | 01 31 (305) | **0x0F** | 30.5" = 77.5cm ✅ |
+
+**Conclusions:**
+- ✅ Height value changes with units: mm in CM mode, tenths-of-inches in inch mode
+- ❌ **P2 does NOT change with units** — still 0x0F in both modes
+- ✅ Physical limits (0x07 response) always return mm regardless of units
+- ❌ Set-units command (0x0E) does NOT work over RJ-12
+- P2 = 0x0F remains a mystery — likely controller model/capability flags
+
+### Experiment 2: BT App Commands (2026-04-12)
+
+Tested decompiled Bluetooth app commands over RJ-12:
+
+| Cmd | Name | Response |
+|-----|------|----------|
+| 0xA0 | PATCH | ❌ No response |
+| 0xA2 | FETCH_STAND_TIME | ❌ No response |
+| 0xA6 | FETCH_STAND_TIME (alt) | ❌ No response |
+| 0xAA | FETCH_ALL_TIME | ❌ No response |
+| 0xAD | SET_MEMORY_HEIGHT | ❌ No response |
+
+**Conclusion:** BT app commands are not processed over the RJ-12 UART.
+These likely require the BT module to intercept and handle them separately.
+
+### Handset Menu Options Mapping
+
+The touchpanel handset has these menu options. Mapping to known protocol commands:
+
+| Menu Option | Likely Command | Status |
+|-------------|---------------|--------|
+| Lock/unlock | **0x1F** (we got 0x00 = unlocked) | ✅ Mapped |
+| Max height | 0x21 (SET_MAX) | Known |
+| Min height | 0x22 (SET_MIN) | Known |
+| Units | 0x0E (SET_UNITS) — only works from handset | Known |
+| Anti-collision | 0x1D (COLL_SENS) | Known |
+| Screen brightness | **UNKNOWN** — undocumented! | 🆕 |
+| Button brightness | **UNKNOWN** — undocumented! | 🆕 |
+| Memory preset mode | 0x19 (MEM_MODE) | Known |
+| Calibrate height | 0x91 (CALIBRATE) — DANGER | Known |
+
+**New discovery:** Screen brightness and button brightness are completely
+undocumented in any source. These may use command codes in the unexplored
+ranges (0x10-0x18, 0x1A, 0x1E, 0x24, etc.) or may be handset-local settings
+that don't go through the controller.
+
+---
+
 ## Observations & Open Questions
 
 ### HEIGHT Third Byte (P2)
 The HEIGHT response always has `0x0F` as the third parameter on our controller.
-The phord docs note seeing `0x07` and `0x0F`. This might indicate:
-- Units (0x07 = inches mode, 0x0F = cm mode)?
-- Controller model/firmware identifier?
-- Something else entirely?
+The phord docs note seeing `0x07` and `0x0F`.
 
-**Experiment idea:** Change units to inches and see if P2 changes.
+**Experiment result:** P2 does NOT change when switching between CM and inches.
+Remaining theories:
+- Controller model/capability flags
+- Movement state indicator (tested only at rest so far)
+- Bit field: 0x0F = 0b00001111 — maybe feature support bitmask?
 
 ### Preset Values vs Display Height
 Preset positions are stored as raw encoder values, not display millimeters:
