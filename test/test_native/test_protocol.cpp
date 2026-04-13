@@ -1,6 +1,7 @@
 #include <unity.h>
 #include "jarvis_protocol.h"
 #include "jarvis_desk.h"
+#include <SoftwareSerial.h>
 
 // millis() backing store
 unsigned long _mock_millis = 0;

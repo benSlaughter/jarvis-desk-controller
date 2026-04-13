@@ -495,6 +495,10 @@ void setup() {
   Serial.println(F("Type 'help' for commands"));
   Serial.println();
 
+  // Ensure serial port is ready before desk.begin()
+  activeDeskSerial->begin(9600);
+  activeDeskSerial->listen();
+
   desk.setSerial(activeDeskSerial);
   desk.onPacket(onDeskPacket);
   desk.onDebugByte(onDebugByte);

@@ -1,6 +1,6 @@
 #include "jarvis_desk.h"
 
-JarvisDesk::JarvisDesk(SoftwareSerial* serial)
+JarvisDesk::JarvisDesk(Stream* serial)
   : _serial(serial),
     _callback(nullptr),
     _debugCallback(nullptr),
@@ -30,14 +30,13 @@ JarvisDesk::JarvisDesk(SoftwareSerial* serial)
     _moveToStartTime(0),
     _targetReachedCallback(nullptr) {}
 
-void JarvisDesk::setSerial(SoftwareSerial* serial) {
+void JarvisDesk::setSerial(Stream* serial) {
   _serial = serial;
 }
 
 void JarvisDesk::begin() {
-  // SoftwareSerial baud rate / polarity is set by the caller.
-  // 9600 baud, 8N1
-  _serial->begin(9600);
+  // Caller must configure the serial port (baud rate, polarity, etc.)
+  // before calling begin().
   _deskState = DESK_WAKING;
   _lastWakeAttempt = millis();
   _wakeRetries = 0;

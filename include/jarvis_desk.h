@@ -1,7 +1,6 @@
 #ifndef JARVIS_DESK_H
 #define JARVIS_DESK_H
 
-#include <SoftwareSerial.h>
 #include "jarvis_protocol.h"
 
 // --- Parser states ---
@@ -39,13 +38,13 @@ typedef void (*DebugCallback)(uint8_t byte);
 
 class JarvisDesk {
 public:
-  JarvisDesk(SoftwareSerial* serial);
+  JarvisDesk(Stream* serial);
 
   void begin();
   void update();  // call from loop()
 
   // Swap the underlying serial port (for polarity detection)
-  void setSerial(SoftwareSerial* serial);
+  void setSerial(Stream* serial);
 
   // Set callback for decoded packets from the desk
   void onPacket(PacketCallback cb);
@@ -94,7 +93,7 @@ public:
   bool hasPhysicalLimits() const;
 
 private:
-  SoftwareSerial* _serial;
+  Stream* _serial;
   PacketCallback _callback;
   DebugCallback _debugCallback;
   bool _debugEnabled;
