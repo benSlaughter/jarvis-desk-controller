@@ -7,8 +7,8 @@
 // ============================================================================
 
 /* [PCB & Component Dimensions] */
-pcb_length       = 38;    // mm, X-axis (updated for Beetle + RJ-12)
-pcb_width        = 30;    // mm, Y-axis (updated for 16-pin Beetle)
+pcb_length       = 40;    // mm, X-axis (landscape: RJ-12 left, USB right)
+pcb_width        = 25;    // mm, Y-axis
 pcb_thickness    = 1.6;   // mm, FR4 board
 
 beetle_length    = 25;    // mm (Beetle board height)
@@ -193,40 +193,37 @@ module top_pcb_hold_downs() {
             cylinder(d=nub_d, h=top_interior - 1);
 }
 
-// RJ-12 cutout on +X face (bottom half)
+// RJ-12 cutout on -X face (left wall)
 module rj12_cutout() {
-    // Centered on Y, positioned at +X wall
-    cx = outer_x - wall - 0.1;
     cy = (outer_y - rj12_width) / 2;
     cz = floor_h + pcb_post_h + pcb_thickness - 1;
-    translate([cx, cy, cz])
+    translate([-0.1, cy, cz])
         cube([wall + 0.2, rj12_width, rj12_height + 2]);
 }
 
 // RJ-12 cutout extending into top shell
 module rj12_cutout_top() {
-    cx = outer_x - wall - 0.1;
     cy = (outer_y - rj12_width) / 2;
     cz = split_z - 0.1;
-    translate([cx, cy, cz])
+    translate([-0.1, cy, cz])
         cube([wall + 0.2, rj12_width, top_h + 0.2]);
 }
 
-// USB-C cutout on -X face
+// USB-C cutout on +X face (right wall)
 module usb_cutout() {
-    // USB-C centered on Beetle which is centered on PCB
+    cx = outer_x - wall - 0.1;
     cy = (outer_y - usb_width) / 2;
-    // USB is at Beetle level: post + pcb + header clearance, USB on bottom of Beetle
     cz = floor_h + pcb_post_h + pcb_thickness + header_height - beetle_bottom_h - usb_height/2;
-    translate([-0.1, cy, cz])
+    translate([cx, cy, cz])
         cube([wall + 0.2, usb_width, usb_height + tolerance]);
 }
 
 // USB-C cutout extending into top shell
 module usb_cutout_top() {
+    cx = outer_x - wall - 0.1;
     cy = (outer_y - usb_width) / 2;
     cz = split_z - 0.1;
-    translate([-0.1, cy, cz])
+    translate([cx, cy, cz])
         cube([wall + 0.2, usb_width, usb_height + tolerance + 2]);
 }
 

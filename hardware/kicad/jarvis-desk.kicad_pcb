@@ -78,22 +78,25 @@
   (net 4 "HTX")
   (net 5 "RX_DIV")
 
-  (gr_line (start 0 0) (end 38 0) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000001"))
-  (gr_line (start 38 0) (end 38 30) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000002"))
-  (gr_line (start 38 30) (end 0 30) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000003"))
-  (gr_line (start 0 30) (end 0 0) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000004"))
+  (gr_line (start 0 0) (end 40 0) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000001"))
+  (gr_line (start 40 0) (end 40 25) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000002"))
+  (gr_line (start 40 25) (end 0 25) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000003"))
+  (gr_line (start 0 25) (end 0 0) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000004"))
 
-  (gr_text "Jarvis Desk Controller" (at 19 1.5) (layer "F.SilkS") (uuid "a0000001-0001-4001-8001-000000000010")
+  (gr_text "Jarvis Desk Controller" (at 20 2) (layer "F.SilkS") (uuid "a0000001-0001-4001-8001-000000000010")
     (effects (font (size 1.2 1.2) (thickness 0.15)))
   )
-  (gr_text "v1.0" (at 19 28.5) (layer "F.SilkS") (uuid "a0000001-0001-4001-8001-000000000011")
+  (gr_text "v1.0" (at 20 23.5) (layer "F.SilkS") (uuid "a0000001-0001-4001-8001-000000000011")
     (effects (font (size 1 1) (thickness 0.12)))
+  )
+  (gr_text "Route traces manually in KiCad" (at 20 21) (layer "F.SilkS") (uuid "a0000001-0001-4001-8001-000000000012")
+    (effects (font (size 0.8 0.8) (thickness 0.1)))
   )
 
   (footprint "MountingHole:MountingHole_2.2mm_M2"
     (layer "F.Cu")
     (uuid "b0000001-0001-4001-8001-000000000001")
-    (at 2.5 2.5)
+    (at 3 3)
     (property "Reference" "H1" (at 0 -2.5 0) (layer "F.SilkS") (uuid "b0000001-0001-4001-8001-100000000001") (effects (font (size 1 1) (thickness 0.15))))
     (property "Value" "MountingHole_M2" (at 0 2.5 0) (layer "F.Fab") (uuid "b0000001-0001-4001-8001-100000000002") (effects (font (size 1 1) (thickness 0.15))))
     (property "Footprint" "MountingHole:MountingHole_2.2mm_M2" (at 0 0 0) (layer "F.Fab") (uuid "b0000001-0001-4001-8001-100000000003") (effects (font (size 1.27 1.27)) hide))
@@ -102,7 +105,7 @@
   (footprint "MountingHole:MountingHole_2.2mm_M2"
     (layer "F.Cu")
     (uuid "b0000001-0001-4001-8001-000000000002")
-    (at 35.5 27.5)
+    (at 37 22)
     (property "Reference" "H2" (at 0 -2.5 0) (layer "F.SilkS") (uuid "b0000001-0001-4001-8001-100000000004") (effects (font (size 1 1) (thickness 0.15))))
     (property "Value" "MountingHole_M2" (at 0 2.5 0) (layer "F.Fab") (uuid "b0000001-0001-4001-8001-100000000005") (effects (font (size 1 1) (thickness 0.15))))
     (property "Footprint" "MountingHole:MountingHole_2.2mm_M2" (at 0 0 0) (layer "F.Fab") (uuid "b0000001-0001-4001-8001-100000000006") (effects (font (size 1.27 1.27)) hide))
@@ -112,7 +115,7 @@
   (footprint "Connector_RJ:RJ12_Amphenol_54601"
     (layer "F.Cu")
     (uuid "c0000001-0001-4001-8001-000000000001")
-    (at 32 12)
+    (at 5 12.5)
     (property "Reference" "J1" (at 0 -6 0) (layer "F.SilkS") (uuid "c0000001-0001-4001-8001-100000000001") (effects (font (size 1 1) (thickness 0.15))))
     (property "Value" "RJ12_6P6C" (at 0 6 0) (layer "F.Fab") (uuid "c0000001-0001-4001-8001-100000000002") (effects (font (size 1 1) (thickness 0.15))))
     (property "Footprint" "Connector_RJ:RJ12_Amphenol_54601" (at 0 0 0) (layer "F.Fab") (uuid "c0000001-0001-4001-8001-100000000003") (effects (font (size 1.27 1.27)) hide))
@@ -127,7 +130,7 @@
   (footprint "Resistor_SMD:R_0805_2012Metric"
     (layer "F.Cu")
     (uuid "d0000001-0001-4001-8001-000000000001")
-    (at 26.5 10)
+    (at 16 10)
     (property "Reference" "R1" (at 0 -1.5 0) (layer "F.SilkS") (uuid "d0000001-0001-4001-8001-100000000001") (effects (font (size 0.8 0.8) (thickness 0.12))))
     (property "Value" "1k" (at 0 1.5 0) (layer "F.Fab") (uuid "d0000001-0001-4001-8001-100000000002") (effects (font (size 0.8 0.8) (thickness 0.12))))
     (property "Footprint" "Resistor_SMD:R_0805_2012Metric" (at 0 0 0) (layer "F.Fab") (uuid "d0000001-0001-4001-8001-100000000003") (effects (font (size 1.27 1.27)) hide))
@@ -138,7 +141,7 @@
   (footprint "Resistor_SMD:R_0805_2012Metric"
     (layer "F.Cu")
     (uuid "d0000001-0001-4001-8001-000000000002")
-    (at 26.5 16)
+    (at 16 14)
     (property "Reference" "R2" (at 0 -1.5 0) (layer "F.SilkS") (uuid "d0000001-0001-4001-8001-100000000004") (effects (font (size 0.8 0.8) (thickness 0.12))))
     (property "Value" "2k" (at 0 1.5 0) (layer "F.Fab") (uuid "d0000001-0001-4001-8001-100000000005") (effects (font (size 0.8 0.8) (thickness 0.12))))
     (property "Footprint" "Resistor_SMD:R_0805_2012Metric" (at 0 0 0) (layer "F.Fab") (uuid "d0000001-0001-4001-8001-100000000006") (effects (font (size 1.27 1.27)) hide))
@@ -149,9 +152,9 @@
   (footprint "libs:Beetle_ESP32-C6"
     (layer "F.Cu")
     (uuid "e0000001-0001-4001-8001-000000000001")
-    (at 2 28)
-    (property "Reference" "U1" (at 10.775 -13.69 0) (layer "F.SilkS") (uuid "e0000001-0001-4001-8001-100000000001") (effects (font (size 1 1) (thickness 0.15))))
-    (property "Value" "Beetle_ESP32-C6" (at 10.775 -12.19 0) (layer "F.Fab") (uuid "e0000001-0001-4001-8001-100000000002") (effects (font (size 1 1) (thickness 0.15))))
+    (at 28 12.5 90)
+    (property "Reference" "U1" (at 0 -3 0) (layer "F.SilkS") (uuid "e0000001-0001-4001-8001-100000000001") (effects (font (size 1 1) (thickness 0.15))))
+    (property "Value" "Beetle_ESP32-C6" (at 0 3 0) (layer "F.Fab") (uuid "e0000001-0001-4001-8001-100000000002") (effects (font (size 1 1) (thickness 0.15))))
     (property "Footprint" "libs:Beetle_ESP32-C6" (at 0 0 0) (layer "F.Fab") (uuid "e0000001-0001-4001-8001-100000000003") (effects (font (size 1.27 1.27)) hide))
     (attr smd)
     (fp_line (start 0 -1.5) (end 0 -23.5) (stroke (width 0.1) (type default)) (layer "F.SilkS") (uuid "e1000001-0001-4001-8001-000000000001"))
@@ -180,25 +183,6 @@
     (pad "16" thru_hole circle (at 19.125 -22.34) (size 1.8 1.8) (drill 0.9) (layers "*.Cu" "*.Mask") (net 0 "") (uuid "e0000001-0001-4001-8001-200000000016"))
   )
 
-  (segment (start 30.095 12) (end 30.095 8.2) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000001"))
-  (segment (start 30.095 8.2) (end 21.125 8.2) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000002"))
-  (segment (start 27.5 16) (end 30.095 16) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000003"))
-  (segment (start 30.095 16) (end 30.095 12) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000004"))
-
-  (segment (start 32.635 12) (end 32.635 10.74) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000005"))
-  (segment (start 32.635 10.74) (end 21.125 10.74) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000006"))
-
-  (segment (start 31.365 12) (end 31.365 10) (width 0.25) (layer "F.Cu") (net 3) (uuid "f0000001-0001-4001-8001-000000000007"))
-  (segment (start 31.365 10) (end 25.5 10) (width 0.25) (layer "F.Cu") (net 3) (uuid "f0000001-0001-4001-8001-000000000008"))
-
-  (segment (start 33.905 12) (end 33.905 15.82) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000009"))
-  (segment (start 33.905 15.82) (end 21.125 15.82) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000010"))
-
-  (segment (start 27.5 10) (end 27.5 13.28) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000011"))
-  (segment (start 27.5 13.28) (end 21.125 13.28) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000012"))
-  (segment (start 27.5 13.28) (end 25.5 13.28) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000013"))
-  (segment (start 25.5 13.28) (end 25.5 16) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000014"))
-
   (zone
     (net 1)
     (net_name "GND")
@@ -211,7 +195,7 @@
     (fill yes (thermal_gap 0.5) (thermal_bridge_width 0.5))
     (polygon
       (pts
-        (xy 0 0) (xy 38 0) (xy 38 30) (xy 0 30)
+        (xy 0 0) (xy 40 0) (xy 40 25) (xy 0 25)
       )
     )
   )
