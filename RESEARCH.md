@@ -277,6 +277,26 @@ Calibrated desk height from 76.5cm display → 74.4cm (to match tape measure).
 3. Height reports resume with new calibrated values
 4. PHYS_LIMITS update to reflect new offset
 
+### Experiment 6: Anti-Collision Sensitivity via RJ-12 (2026-04-13)
+
+**Write command 0x1D CONFIRMED working over RJ-12!**
+
+Test: goto 1000mm while applying hand pressure to stop the desk.
+
+| Sensitivity | Command | Result |
+|-------------|---------|--------|
+| HIGH (0x01) | `raw 1D 01` | Stopped at ~91.6cm with moderate hand pressure, reversed to 86.8cm |
+| LOW (0x03) | `raw 1D 03` | Went all the way to 99.8cm — same pressure didn't trigger stop |
+
+**Confirmed:** Setter commands work over RJ-12, even though we can't read them back.
+The controller accepts `0x1D` with params 0x01 (High), 0x02 (Medium), 0x03 (Low)
+and the anti-collision behaviour changes immediately.
+
+**This implies all setter commands likely work over RJ-12:**
+- 0x0E (UNITS) — needs further testing (didn't work in earlier test)
+- 0x19 (MEM_MODE) — untested write
+- 0x1D (COLL_SENS) — ✅ CONFIRMED writable
+
 ---
 
 ## Observations & Open Questions
