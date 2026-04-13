@@ -71,7 +71,6 @@
     )
   )
 
-  ; ---- Nets ----
   (net 0 "")
   (net 1 "GND")
   (net 2 "VCC_5V")
@@ -79,13 +78,11 @@
   (net 4 "HTX")
   (net 5 "RX_DIV")
 
-  ; ---- Board outline (35mm x 25mm) on Edge.Cuts ----
   (gr_line (start 0 0) (end 35 0) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000001"))
   (gr_line (start 35 0) (end 35 25) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000002"))
   (gr_line (start 35 25) (end 0 25) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000003"))
   (gr_line (start 0 25) (end 0 0) (stroke (width 0.1) (type solid)) (layer "Edge.Cuts") (uuid "a0000001-0001-4001-8001-000000000004"))
 
-  ; ---- Silkscreen title ----
   (gr_text "Jarvis Desk Controller" (at 17.5 2.5) (layer "F.SilkS") (uuid "a0000001-0001-4001-8001-000000000010")
     (effects (font (size 1.2 1.2) (thickness 0.15)))
   )
@@ -93,7 +90,6 @@
     (effects (font (size 1 1) (thickness 0.12)))
   )
 
-  ; ---- Mounting Holes ----
   (footprint "MountingHole:MountingHole_2.2mm_M2"
     (layer "F.Cu")
     (uuid "b0000001-0001-4001-8001-000000000001")
@@ -113,7 +109,6 @@
     (pad "" np_thru_hole circle (at 0 0) (size 2.2 2.2) (drill 2.2) (layers "*.Cu" "*.Mask") (uuid "b0000001-0001-4001-8001-200000000002"))
   )
 
-  ; ---- J1: RJ12 connector (left edge, centered vertically) ----
   (footprint "Connector_RJ:RJ12_Amphenol_54601"
     (layer "F.Cu")
     (uuid "c0000001-0001-4001-8001-000000000001")
@@ -129,7 +124,6 @@
     (pad "6" thru_hole circle (at 3.175 0) (size 1.6 1.6) (drill 1.0) (layers "*.Cu" "*.Mask") (net 0 "") (uuid "c0000001-0001-4001-8001-200000000006"))
   )
 
-  ; ---- R1: 1kΩ SMD 0805 (between J1 and U1) ----
   (footprint "Resistor_SMD:R_0805_2012Metric"
     (layer "F.Cu")
     (uuid "d0000001-0001-4001-8001-000000000001")
@@ -141,7 +135,6 @@
     (pad "2" smd roundrect (at 1 0) (size 1.0 1.2) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25) (net 5 "RX_DIV") (uuid "d0000001-0001-4001-8001-200000000002"))
   )
 
-  ; ---- R2: 2kΩ SMD 0805 (between J1 and U1, below R1) ----
   (footprint "Resistor_SMD:R_0805_2012Metric"
     (layer "F.Cu")
     (uuid "d0000001-0001-4001-8001-000000000002")
@@ -153,8 +146,6 @@
     (pad "2" smd roundrect (at 1 0) (size 1.0 1.2) (layers "F.Cu" "F.Paste" "F.Mask") (roundrect_rratio 0.25) (net 1 "GND") (uuid "d0000001-0001-4001-8001-200000000004"))
   )
 
-  ; ---- U1: Beetle ESP32-C6 as 2x7 pin header (centered on board) ----
-  ; Pin mapping: 1=VIN, 3=GND_in, 7=GPIO17(RX), 9=GPIO18(TX), 13=GND
   (footprint "Connector_PinHeader_2.54mm:PinHeader_2x07_P2.54mm_Vertical"
     (layer "F.Cu")
     (uuid "e0000001-0001-4001-8001-000000000001")
@@ -178,25 +169,20 @@
     (pad "14" thru_hole oval (at 2.54 15.24) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (net 0 "") (uuid "e0000001-0001-4001-8001-200000000014"))
   )
 
-  ; ---- Copper Traces (F.Cu) ----
 
-  ; Power: VCC_5V - J1 pin 4 to U1 pin 1 (0.5mm width)
   (segment (start 4.635 12.5) (end 4.635 6) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000001"))
   (segment (start 4.635 6) (end 25 6) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000002"))
   (segment (start 25 6) (end 25 12.5) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000003"))
 
-  ; Power: GND - J1 pin 2 to R2 pad 2, to U1 pin 13 (0.5mm width)
   (segment (start 2.095 12.5) (end 2.095 19) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000004"))
   (segment (start 2.095 19) (end 14 19) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000005"))
   (segment (start 14 19) (end 14 15) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000006"))
   (segment (start 14 19) (end 25 19) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000007"))
   (segment (start 25 19) (end 25 27.74) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000008"))
 
-  ; Signal: DTX - J1 pin 3 to R1 pad 1 (0.25mm width)
   (segment (start 3.365 12.5) (end 3.365 10) (width 0.25) (layer "F.Cu") (net 3) (uuid "f0000001-0001-4001-8001-000000000009"))
   (segment (start 3.365 10) (end 12 10) (width 0.25) (layer "F.Cu") (net 3) (uuid "f0000001-0001-4001-8001-000000000010"))
 
-  ; Signal: RX_DIV - R1 pad 2 to R2 pad 1 junction, then to U1 pin 7/GPIO17 (0.25mm width)
   (segment (start 14 10) (end 16 10) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000011"))
   (segment (start 16 10) (end 16 15) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000012"))
   (segment (start 16 15) (end 12 15) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000013"))
@@ -204,13 +190,11 @@
   (segment (start 16 8) (end 25 8) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000015"))
   (segment (start 25 8) (end 25 20.12) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000016"))
 
-  ; Signal: HTX - J1 pin 5 to U1 pin 9/GPIO18 (0.25mm width)
   (segment (start 5.905 12.5) (end 5.905 22) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000017"))
   (segment (start 5.905 22) (end 20 22) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000018"))
   (segment (start 20 22) (end 20 22.66) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000019"))
   (segment (start 20 22.66) (end 25 22.66) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000020"))
 
-  ; ---- Ground Pour on B.Cu ----
   (zone
     (net 1)
     (net_name "GND")
