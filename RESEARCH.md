@@ -297,6 +297,33 @@ and the anti-collision behaviour changes immediately.
 - 0x19 (MEM_MODE) — untested write
 - 0x1D (COLL_SENS) — ✅ CONFIRMED writable
 
+### Experiment 7: 0x1F is LOCK! (2026-04-13)
+
+**🔓 MAJOR DISCOVERY: 0x1F is the controller-level LOCK command!**
+
+Tried out-of-the-box thinking — instead of reading 0x1F, sent it as a setter:
+- `raw 1F 01` → desk responded with `01` → **desk completely locked!**
+- Handset buttons stopped working
+- Handset menu Lock/Unlock also couldn't override it
+- `raw 1F 00` did NOT unlock — responded `01` (echoes previous state)
+- `raw 1F 02` — no response, didn't unlock either
+- Only power cycle unlocked the desk
+
+**Findings:**
+- `0x1F` with param `0x01` = **LOCK** the desk controller
+- Lock is at the **controller level** — even the handset can't override it
+- The query (0x1F with no params) intermittently reports `0x00` (unlocked) or no response
+- **No unlock command found** — power cycle required
+- Lock state not visible in any scan query
+
+**⚠️ WARNING:** Do not send `0x1F 01` unless you're prepared to power cycle!
+The handset's own lock/unlock is a separate, handset-local feature.
+This is a deeper controller-level lock with no known software unlock.
+
+**Theory:** The unlock may require a specific sequence (like sending 0x1F 01
+twice = toggle), or a different command entirely. Or it may be intentionally
+power-cycle-only as a safety feature.
+
 ---
 
 ## Observations & Open Questions
