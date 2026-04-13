@@ -181,6 +181,14 @@ void JarvisDesk::setUnits(uint8_t units) {
   sendCommandWithParam(CMD_UNITS, units);
 }
 
+void JarvisDesk::setCollisionSensitivity(uint8_t level) {
+  sendCommandWithParam(CMD_COLL_SENS, level);
+}
+
+void JarvisDesk::setMemoryMode(uint8_t mode) {
+  sendCommandWithParam(CMD_MEM_MODE, mode);
+}
+
 void JarvisDesk::sendWake() {
   sendCommand(CMD_WAKE);
 }

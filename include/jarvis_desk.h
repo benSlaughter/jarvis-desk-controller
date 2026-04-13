@@ -72,6 +72,8 @@ public:
   void requestLimits();
   void requestPhysicalLimits();
   void setUnits(uint8_t units);      // UNITS_CM or UNITS_IN
+  void setCollisionSensitivity(uint8_t level); // COLL_HIGH, COLL_MEDIUM, COLL_LOW
+  void setMemoryMode(uint8_t mode);  // MEM_ONE_TOUCH or MEM_CONSTANT_TOUCH
   void sendWake();
 
   // --- Native goto ---

@@ -234,13 +234,44 @@ void processCommand(const String& cmd) {
     Serial.println(F("> Sending wake"));
     desk.sendWake();
   }
-  else if (c == "cm") {
-    Serial.println(F("> Setting units to cm"));
+  else if (c == "units cm") {
+    Serial.println(F("> Units set to CM (may not work over RJ-12)"));
     desk.setUnits(UNITS_CM);
   }
-  else if (c == "in" || c == "inches") {
-    Serial.println(F("> Setting units to inches"));
+  else if (c == "units in") {
+    Serial.println(F("> Units set to IN (may not work over RJ-12)"));
     desk.setUnits(UNITS_IN);
+  }
+  else if (c == "collision high") {
+    Serial.println(F("> Anti-collision set to HIGH"));
+    desk.setCollisionSensitivity(COLL_HIGH);
+  }
+  else if (c == "collision medium") {
+    Serial.println(F("> Anti-collision set to MEDIUM"));
+    desk.setCollisionSensitivity(COLL_MEDIUM);
+  }
+  else if (c == "collision low") {
+    Serial.println(F("> Anti-collision set to LOW"));
+    desk.setCollisionSensitivity(COLL_LOW);
+  }
+  else if (c == "memmode onetouch") {
+    Serial.println(F("> Memory mode set to one-touch"));
+    desk.setMemoryMode(MEM_ONE_TOUCH);
+  }
+  else if (c == "memmode constant") {
+    Serial.println(F("> Memory mode set to constant-touch"));
+    desk.setMemoryMode(MEM_CONSTANT_TOUCH);
+  }
+  else if (c == "home") {
+    if (!desk.hasPhysicalLimits()) {
+      Serial.println(F("! Physical limits not known — run 'physlimits' first"));
+    } else {
+      uint16_t minH = desk.getPhysicalMin();
+      Serial.print(F("> Going to physical minimum: "));
+      Serial.print(minH);
+      Serial.println(F("mm"));
+      desk.moveToHeight(minH);
+    }
   }
   else if (c == "debug on") {
     desk.setDebug(true);
@@ -381,15 +412,18 @@ void processCommand(const String& cmd) {
     Serial.println(F("  settings    - Request all settings"));
     Serial.println(F("  limits      - Request limit settings"));
     Serial.println(F("  physlimits  - Request physical limits"));
+    Serial.println(F("  home        - Go to physical minimum height"));
     Serial.println(F("  wake        - Send wake signal"));
-    Serial.println(F("  cm / in     - Set display units"));
-    Serial.println(F("  debug on/off- Toggle raw hex byte output"));
+    Serial.println(F("  collision high/medium/low - Anti-collision sensitivity"));
+    Serial.println(F("  memmode onetouch/constant - Memory preset mode"));
+    Serial.println(F("  units cm/in   - Set display units (may not work over RJ-12)"));
+    Serial.println(F("  debug on/off  - Toggle raw hex byte output"));
     Serial.println(F("  polarity      - Show serial polarity"));
     Serial.println(F("  polarity swap - Toggle serial polarity"));
     Serial.println(F("  raw <hex>     - Send raw command (e.g., raw 0C)"));
     Serial.println(F("  scan          - Query all known read commands"));
-    Serial.println(F("  status      - Show connection state"));
-    Serial.println(F("  help        - Show this message"));
+    Serial.println(F("  status        - Show connection state"));
+    Serial.println(F("  help          - Show this message"));
   }
   else {
     Serial.print(F("Unknown command: "));
