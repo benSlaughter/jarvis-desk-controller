@@ -165,6 +165,23 @@ The controller accepts and applies them immediately.
 | HIGH | `0x1D 0x01` | Moderate hand pressure |
 | LOW | `0x1D 0x03` | Full body weight |
 
+### 0x1F Is the Controller-Level Lock
+
+We found this by trying something nobody documented — sending 0x1F as a
+**setter** instead of a getter:
+
+```
+raw 1F 01    → desk locked. Completely. Handset couldn't override it.
+raw 1F 00    → didn't unlock
+power cycle  → unlocked
+```
+
+This is different from the handset's Lock/Unlock menu option (which is local
+to the handset). Command 0x1F locks the **motor controller itself**. No known
+software unlock — power cycle only.
+
+Don't do this unless you're OK with pulling the plug.
+
 ### Presets Are Raw Encoder Values
 
 The POS_1-4 responses are internal encoder tick counts, not display millimetres.
@@ -196,6 +213,7 @@ We confirmed this by running scan before and after toggling each one. Zero chang
 | Anti-collision | ❌ | ✅ confirmed | ✅ read + write |
 | Units | ❌ | ❌ | ✅ |
 | Memory mode | ❌ | Likely works | ✅ |
+| Controller lock | ❌ | ✅ (0x1F 01) | Unknown |
 | Goto height | — | ✅ (0x1B) | ✅ |
 | Stop | — | ✅ (0x2B) | ✅ |
 
@@ -203,10 +221,11 @@ We confirmed this by running scan before and after toggling each one. Zero chang
 
 | Response | Our data | Best guess |
 |----------|----------|------------|
-| 0x05 (from 0x08) | FF FF or 00 06 | Error log? Resets on power cycle |
-| 0x06 (from 0x09) | 01 | Protocol version? |
-| 0x1C (from 0x1C) | 0x35 | Firmware version? |
-| HEIGHT P2 byte | always 0x0F | Doesn't change with units, calibration, or any setting |
+| 0x05 (from 0x08) | FF FF (once saw 00 06) | Unknown. Resets on power cycle |
+| 0x06 (from 0x09) | 01 | Protocol version or controller type |
+| 0x1C (from 0x1C) | 0x35 | Firmware version or model ID |
+| HEIGHT P2 byte | always 0x0F | Hardware constant. Doesn't change with anything |
+| 0x1F unlock | ??? | No software unlock found. Power cycle only |
 
 ## Standing on the Shoulders of Giants
 
