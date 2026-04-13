@@ -1,12 +1,26 @@
-# Jarvis Desk Controller — Arduino Uno
+# Jarvis Desk Controller
 
-Control a Jarvis/Jiecang standing desk from an Arduino Uno via the **RJ-12 port** using the reverse-engineered serial protocol from [phord/Jarvis](https://github.com/phord/Jarvis).
+Control a Jarvis/Jiecang standing desk via the **RJ-12 port** using the reverse-engineered serial protocol from [phord/Jarvis](https://github.com/phord/Jarvis).
+
+Two platforms are supported:
+
+| Platform | Interface | Features |
+|----------|-----------|----------|
+| **Arduino Uno** | USB Serial CLI | Direct serial commands, interactive terminal |
+| **ESP32-C6** | WiFi + MQTT | Home Assistant auto-discovery, OTA updates |
 
 ## Hardware Required
 
+### Arduino Uno
 - Arduino Uno
 - RJ-12 breakout / socket
 - 2× 1kΩ resistors (signal protection)
+- Hookup wire
+
+### ESP32-C6
+- DFRobot Beetle ESP32-C6 (or any ESP32-C6 board)
+- RJ-12 breakout / socket
+- 1× 1kΩ + 1× 2kΩ resistor (voltage divider for RX line)
 - Hookup wire
 
 ## Wiring
@@ -50,6 +64,21 @@ The 1kΩ resistors protect both the Arduino and the desk controller from shorts,
 
 > ⚠️ **Never connect both USB and desk 5V simultaneously** — this back-powers the USB host and can damage your computer or the desk controller. Use a diode or power switch if you need both.
 
+### ESP32-C6 Wiring
+
+```
+RJ-12 Pin 2 (GND) → ESP32 GND
+RJ-12 Pin 3 (DTX) → 1kΩ + 2kΩ voltage divider → ESP32 GPIO17 (RX)
+RJ-12 Pin 4 (VCC) → Not connected (USB powered)
+RJ-12 Pin 5 (HTX) → ESP32 GPIO18 (TX) — 3.3V output is OK for desk 5V input
+```
+
+> ⚠️ **Voltage Warning:** The ESP32-C6 is **3.3V logic, NOT 5V tolerant**. The desk outputs 5V signals.
+>
+> - **RX line (desk→ESP32):** MUST use a voltage divider (1kΩ + 2kΩ gives ~3.3V) or a level shifter
+> - **TX line (ESP32→desk):** 3.3V output is accepted by the desk's 5V logic (above V<sub>IH</sub> threshold)
+> - **Never connect desk 5V directly to ESP32 GPIO — it will damage the chip**
+
 ## Serial Signal Notes
 
 Live testing on a Jiecang JCB36N2CA (Fully Jarvis) confirmed **normal UART polarity** — standard 9600/8N1 with no inversion needed. Earlier documentation suggested inverted logic, but this was not the case on the tested controller.
@@ -70,17 +99,57 @@ This project uses [PlatformIO](https://platformio.org/) for build/upload/serial 
 Use the PlatformIO toolbar at the bottom of VSCode, or:
 
 ```bash
-# Build
-pio run
+# Arduino Uno
+pio run -e uno
+pio run -e uno --target upload
 
-# Upload to Arduino
-pio run --target upload
+# ESP32-C6
+pio run -e esp32c6
+pio run -e esp32c6 --target upload
+
+# Tests
+pio test -e native
 
 # Open serial monitor (115200 baud)
 pio device monitor
 
 # Build + upload + monitor in one shot
-pio run --target upload && pio device monitor
+pio run -e uno --target upload && pio device monitor
+```
+
+### ESP32-C6 Setup
+
+1. Copy `include/config.example.h` to `include/config.h`
+2. Edit `config.h` with your WiFi SSID/password and MQTT broker IP
+3. Build: `pio run -e esp32c6`
+4. Upload: `pio run -e esp32c6 --target upload`
+5. Monitor: `pio device monitor`
+
+### Home Assistant Integration
+
+The ESP32 firmware publishes MQTT auto-discovery messages. After connecting:
+
+- A **"Jarvis Desk"** device appears automatically in Home Assistant
+- **Entities:** height sensor (cm), target height (number), presets 1–4 (buttons), up/down/stop (buttons)
+- **Requires** an MQTT broker (e.g., Mosquitto) configured in Home Assistant
+
+### MQTT Topics
+
+| Topic | Direction | Description |
+|-------|-----------|-------------|
+| `jarvis-desk/status` | ESP→broker | Online/offline status (retained LWT) |
+| `jarvis-desk/height/state` | ESP→broker | Current height in mm (retained) |
+| `jarvis-desk/height/set` | broker→ESP | Move to target height in mm |
+| `jarvis-desk/preset/set` | broker→ESP | Move to preset (payload: `1`–`4`) |
+| `jarvis-desk/command` | broker→ESP | Send command: `up`, `down`, `stop` |
+| `jarvis-desk/collision/set` | broker→ESP | Set collision sensitivity: `high`, `medium`, `low` |
+
+### OTA Updates
+
+After the first upload via USB, subsequent updates can use OTA:
+
+```bash
+pio run -e esp32c6 --target upload --upload-port jarvis-desk.local
 ```
 
 ### Alternative: Arduino IDE

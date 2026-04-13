@@ -247,9 +247,21 @@ None of this would have been possible without:
 ## What's Next
 
 - Proper CLI commands for collision sensitivity, memory mode, units
-- ESP32 port for WiFi control
-- Home Assistant / MQTT integration
 - Sit/stand timer with reminders
+
+## The ESP32 Port
+
+After getting everything working on the Arduino Uno, the next step was obvious: WiFi.
+
+The **DFRobot Beetle ESP32-C6** is tiny enough to hide behind the desk, and has HardwareSerial so no more SoftwareSerial timing issues. The main catch is voltage levels — the ESP32-C6 is 3.3V logic, and the desk outputs 5V. A simple 1kΩ + 2kΩ voltage divider on the RX line solves that. The TX direction works as-is since 3.3V is above the desk's V<sub>IH</sub> threshold.
+
+The firmware connects to WiFi and an MQTT broker, then publishes Home Assistant auto-discovery messages. Within seconds of powering on, a "Jarvis Desk" device appears in HA with a height sensor, target height number input, preset buttons, and movement controls. No YAML configuration needed.
+
+Height updates are debounced — published at most every 500ms during movement, then a final update when the desk settles. MQTT reconnects with exponential backoff. ArduinoOTA means after the first USB flash, all updates go over WiFi.
+
+The desk protocol library (`JarvisDesk`) is shared between both platforms — only the entry points (`main_uno.cpp` and `main_esp32.cpp`) differ. The Uno version is a serial CLI; the ESP32 version is a headless MQTT bridge.
+
+The code is in `src/main_esp32.cpp`. Config goes in `include/config.h` (copy from `config.example.h`).
 
 The code is a PlatformIO project with 47 unit tests. The research journal with
 raw packet captures is in `RESEARCH.md`.
