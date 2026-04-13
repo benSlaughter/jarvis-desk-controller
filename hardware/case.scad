@@ -7,12 +7,12 @@
 // ============================================================================
 
 /* [PCB & Component Dimensions] */
-pcb_length       = 35;    // mm, X-axis
-pcb_width        = 25;    // mm, Y-axis
+pcb_length       = 38;    // mm, X-axis (updated for Beetle + RJ-12)
+pcb_width        = 30;    // mm, Y-axis (updated for 16-pin Beetle)
 pcb_thickness    = 1.6;   // mm, FR4 board
 
-beetle_length    = 25;    // mm
-beetle_width     = 20.5;  // mm
+beetle_length    = 25;    // mm (Beetle board height)
+beetle_width     = 20.5;  // mm (Beetle board width)
 beetle_comp_h    = 5;     // mm, component height above Beetle PCB
 beetle_bottom_h  = 2;     // mm, USB connector below Beetle PCB
 header_height    = 8;     // mm, pin-header clearance above main PCB
