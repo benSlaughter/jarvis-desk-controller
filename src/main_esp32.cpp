@@ -46,6 +46,9 @@ static const unsigned long HEIGHT_PUBLISH_INTERVAL = 500;
 static bool startupQueriesSent = false;
 static unsigned long deskConnectedTime = 0;
 
+// ── Simulator state ─────────────────────────────────────────────────
+static bool simMode = false;
+
 // ── Callbacks ───────────────────────────────────────────────────────
 
 void onDeskPacket(const JarvisPacket& pkt) {
@@ -398,6 +401,58 @@ void handleStartupQueries() {
 
 // ── Arduino entry points ────────────────────────────────────────────
 
+void processSimCommand(const String& cmd) {
+    if (cmd.startsWith("height ")) {
+        long h = cmd.substring(7).toInt();
+        if (h > 0 && h < 2000) {
+            Serial.printf("SIM: height = %ldmm\n", h);
+            desk.simulateHeightReport((uint16_t)h);
+        } else {
+            Serial.println("SIM: invalid height (use 1-1999)");
+        }
+    } else if (cmd == "sim on") {
+        simMode = true;
+        Serial.println("SIM: simulator ON");
+    } else if (cmd == "sim off") {
+        simMode = false;
+        Serial.println("SIM: simulator OFF");
+    } else if (cmd == "settings") {
+        Serial.println("SIM: injecting settings (limits 620-1270mm)");
+        desk.simulateSettingsReport();
+    } else if (cmd == "status") {
+        Serial.println("──── Status ────");
+        Serial.printf("  WiFi:  %s\n", WiFi.status() == WL_CONNECTED ? "connected" : "disconnected");
+        if (WiFi.status() == WL_CONNECTED)
+            Serial.printf("  IP:    %s\n", WiFi.localIP().toString().c_str());
+        Serial.printf("  MQTT:  %s\n", mqtt.connected() ? "connected" : "disconnected");
+        Serial.printf("  Desk:  %s\n",
+            desk.getState() == DESK_CONNECTED ? "connected" :
+            desk.getState() == DESK_WAKING ? "waking" : "disconnected");
+        Serial.printf("  Height: %umm\n", desk.getLastHeight());
+        Serial.printf("  Sim:   %s\n", simMode ? "ON" : "OFF");
+        Serial.println("────────────────");
+    } else if (cmd == "help") {
+        Serial.println("Commands: height <mm>, sim on/off, settings, status, help");
+    } else {
+        Serial.printf("Unknown command: %s (try 'help')\n", cmd.c_str());
+    }
+}
+
+void handleSerialInput() {
+    static String inputBuf = "";
+    while (Serial.available()) {
+        char c = Serial.read();
+        if (c == '\n' || c == '\r') {
+            if (inputBuf.length() > 0) {
+                processSimCommand(inputBuf);
+                inputBuf = "";
+            }
+        } else {
+            inputBuf += c;
+        }
+    }
+}
+
 void setup() {
     Serial.begin(115200);
     delay(500);
@@ -425,6 +480,7 @@ void setup() {
 
 void loop() {
     desk.update();
+    handleSerialInput();
     handleStartupQueries();
     handleWifi();
     handleMqtt();

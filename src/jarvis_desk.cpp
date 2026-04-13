@@ -452,3 +452,44 @@ void JarvisDesk::updateConnectionState() {
       break;
   }
 }
+
+// ── Simulation ──────────────────────────────────────────────────────
+
+void JarvisDesk::simulateHeightReport(uint16_t heightMm) {
+  _lastHeight = heightMm;
+  _lastHeightTime = millis();
+
+  if (_callback) {
+    JarvisPacket pkt;
+    pkt.address = JARVIS_ADDR_CONTROLLER;
+    pkt.command = RESP_HEIGHT;
+    pkt.length = 3;
+    pkt.params[0] = (heightMm >> 8) & 0xFF;
+    pkt.params[1] = heightMm & 0xFF;
+    pkt.params[2] = 0x0F;
+    pkt.checksum = jarvis_checksum(pkt.command, pkt.length, pkt.params);
+    pkt.valid = true;
+    _callback(pkt);
+  }
+}
+
+void JarvisDesk::simulateSettingsReport() {
+  // Simulate physical limits: 620mm – 1270mm
+  _physicalMin = 620;
+  _physicalMax = 1270;
+  _hasPhysicalLimits = true;
+
+  if (_callback) {
+    JarvisPacket pkt;
+    pkt.address = JARVIS_ADDR_CONTROLLER;
+    pkt.command = RESP_PHYS_LIMITS;
+    pkt.length = 4;
+    pkt.params[0] = (_physicalMin >> 8) & 0xFF;
+    pkt.params[1] = _physicalMin & 0xFF;
+    pkt.params[2] = (_physicalMax >> 8) & 0xFF;
+    pkt.params[3] = _physicalMax & 0xFF;
+    pkt.checksum = jarvis_checksum(pkt.command, pkt.length, pkt.params);
+    pkt.valid = true;
+    _callback(pkt);
+  }
+}

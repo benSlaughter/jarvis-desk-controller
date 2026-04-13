@@ -84,6 +84,10 @@ public:
   uint16_t getTargetHeight() const;
   void onTargetReached(TargetReachedCallback cb);
 
+  // --- Simulation ---
+  void simulateHeightReport(uint16_t heightMm);
+  void simulateSettingsReport();
+
   // --- State ---
   DeskState getState() const;
   uint16_t getLastHeight() const;
