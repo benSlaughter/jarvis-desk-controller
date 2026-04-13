@@ -351,7 +351,8 @@ void publishHeight() {
 
     char buf[8];
     snprintf(buf, sizeof(buf), "%u", currentHeight);
-    mqtt.publish(TOPIC_HEIGHT_STATE, buf, true);
+    bool ok = mqtt.publish(TOPIC_HEIGHT_STATE, buf, true);
+    Serial.printf("MQTT publish height %u: %s\n", currentHeight, ok ? "OK" : "FAILED");
     lastPublishedHeight = currentHeight;
     lastHeightPublishTime = now;
     heightSettled = !moving;
@@ -407,6 +408,10 @@ void processSimCommand(const String& cmd) {
         if (h > 0 && h < 2000) {
             Serial.printf("SIM: height = %ldmm\n", h);
             desk.simulateHeightReport((uint16_t)h);
+            // Force immediate MQTT publish
+            lastPublishedHeight = 0;
+            heightSettled = false;
+            publishHeight();
         } else {
             Serial.println("SIM: invalid height (use 1-1999)");
         }
