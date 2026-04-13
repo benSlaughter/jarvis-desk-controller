@@ -149,9 +149,9 @@
   (footprint "Connector_PinHeader_2.54mm:PinHeader_2x07_P2.54mm_Vertical"
     (layer "F.Cu")
     (uuid "e0000001-0001-4001-8001-000000000001")
-    (at 25 12.5)
-    (property "Reference" "U1" (at 1.27 -10 0) (layer "F.SilkS") (uuid "e0000001-0001-4001-8001-100000000001") (effects (font (size 1 1) (thickness 0.15))))
-    (property "Value" "Beetle_ESP32-C6" (at 1.27 10 0) (layer "F.Fab") (uuid "e0000001-0001-4001-8001-100000000002") (effects (font (size 1 1) (thickness 0.15))))
+    (at 24 4.88)
+    (property "Reference" "U1" (at 1.27 -2 0) (layer "F.SilkS") (uuid "e0000001-0001-4001-8001-100000000001") (effects (font (size 1 1) (thickness 0.15))))
+    (property "Value" "Beetle_ESP32-C6" (at 1.27 17 0) (layer "F.Fab") (uuid "e0000001-0001-4001-8001-100000000002") (effects (font (size 1 1) (thickness 0.15))))
     (property "Footprint" "Connector_PinHeader_2.54mm:PinHeader_2x07_P2.54mm_Vertical" (at 0 0 0) (layer "F.Fab") (uuid "e0000001-0001-4001-8001-100000000003") (effects (font (size 1.27 1.27)) hide))
     (pad "1" thru_hole rect (at 0 0) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (net 2 "VCC_5V") (uuid "e0000001-0001-4001-8001-200000000001"))
     (pad "2" thru_hole oval (at 2.54 0) (size 1.7 1.7) (drill 1.0) (layers "*.Cu" "*.Mask") (net 0 "") (uuid "e0000001-0001-4001-8001-200000000002"))
@@ -170,15 +170,15 @@
   )
 
 
-  (segment (start 4.635 12.5) (end 4.635 6) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000001"))
-  (segment (start 4.635 6) (end 25 6) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000002"))
-  (segment (start 25 6) (end 25 12.5) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000003"))
+  (segment (start 4.635 12.5) (end 4.635 3) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000001"))
+  (segment (start 4.635 3) (end 24 3) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000002"))
+  (segment (start 24 3) (end 24 4.88) (width 0.5) (layer "F.Cu") (net 2) (uuid "f0000001-0001-4001-8001-000000000003"))
 
-  (segment (start 2.095 12.5) (end 2.095 19) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000004"))
-  (segment (start 2.095 19) (end 14 19) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000005"))
-  (segment (start 14 19) (end 14 15) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000006"))
-  (segment (start 14 19) (end 25 19) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000007"))
-  (segment (start 25 19) (end 25 27.74) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000008"))
+  (segment (start 2.095 12.5) (end 2.095 22) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000004"))
+  (segment (start 2.095 22) (end 14 22) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000005"))
+  (segment (start 14 22) (end 14 15) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000006"))
+  (segment (start 14 22) (end 24 22) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000007"))
+  (segment (start 24 22) (end 24 20.12) (width 0.5) (layer "F.Cu") (net 1) (uuid "f0000001-0001-4001-8001-000000000008"))
 
   (segment (start 3.365 12.5) (end 3.365 10) (width 0.25) (layer "F.Cu") (net 3) (uuid "f0000001-0001-4001-8001-000000000009"))
   (segment (start 3.365 10) (end 12 10) (width 0.25) (layer "F.Cu") (net 3) (uuid "f0000001-0001-4001-8001-000000000010"))
@@ -186,14 +186,14 @@
   (segment (start 14 10) (end 16 10) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000011"))
   (segment (start 16 10) (end 16 15) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000012"))
   (segment (start 16 15) (end 12 15) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000013"))
-  (segment (start 16 10) (end 16 8) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000014"))
-  (segment (start 16 8) (end 25 8) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000015"))
-  (segment (start 25 8) (end 25 20.12) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000016"))
+  (segment (start 16 10) (end 20 10) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000014"))
+  (segment (start 20 10) (end 20 12.5) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000015"))
+  (segment (start 20 12.5) (end 24 12.5) (width 0.25) (layer "F.Cu") (net 5) (uuid "f0000001-0001-4001-8001-000000000016"))
 
-  (segment (start 5.905 12.5) (end 5.905 22) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000017"))
-  (segment (start 5.905 22) (end 20 22) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000018"))
-  (segment (start 20 22) (end 20 22.66) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000019"))
-  (segment (start 20 22.66) (end 25 22.66) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000020"))
+  (segment (start 5.905 12.5) (end 5.905 22.5) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000017"))
+  (segment (start 5.905 22.5) (end 21 22.5) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000018"))
+  (segment (start 21 22.5) (end 21 15.04) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000019"))
+  (segment (start 21 15.04) (end 24 15.04) (width 0.25) (layer "F.Cu") (net 4) (uuid "f0000001-0001-4001-8001-000000000020"))
 
   (zone
     (net 1)
