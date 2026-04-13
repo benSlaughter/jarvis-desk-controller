@@ -64,20 +64,61 @@ The 1kΩ resistors protect both the Arduino and the desk controller from shorts,
 
 > ⚠️ **Never connect both USB and desk 5V simultaneously** — this back-powers the USB host and can damage your computer or the desk controller. Use a diode or power switch if you need both.
 
-### ESP32-C6 Wiring
+### ESP32-C6 Wiring (Desk-Powered)
+
+The ESP32 can be powered directly from the desk's 5V supply — no USB needed
+after the first firmware upload (use OTA for updates).
 
 ```
-RJ-12 Pin 2 (GND) → ESP32 GND
-RJ-12 Pin 3 (DTX) → 1kΩ + 2kΩ voltage divider → ESP32 GPIO17 (RX)
-RJ-12 Pin 4 (VCC) → Not connected (USB powered)
-RJ-12 Pin 5 (HTX) → ESP32 GPIO18 (TX) — 3.3V output is OK for desk 5V input
+                    DFRobot Beetle ESP32-C6
+                    ┌─────────────────────┐
+                    │                     │
+RJ-12              │  VIN ←── 5V power   │
+┌──────┐           │  GND ←── Ground     │
+│1    6│           │                     │
+│ NC  NC│           │  GPIO17 (RX) ←─┐   │
+│      │           │                 │   │
+│2 GND─┼──────────→│  GND            │   │
+│      │           │                 │   │
+│3 DTX─┼──[1kΩ]──┬─┼─────────────────┘   │
+│      │         │ │                     │
+│      │       [2kΩ]                     │
+│      │         │ │                     │
+│      │        GND│                     │
+│      │           │                     │
+│4 VCC─┼──────────→│  VIN (5V)           │
+│      │           │                     │
+│5 HTX─┼──────────→│  GPIO18 (TX)        │
+│      │           │                     │
+│6  NC │           └─────────────────────┘
+└──────┘
 ```
 
-> ⚠️ **Voltage Warning:** The ESP32-C6 is **3.3V logic, NOT 5V tolerant**. The desk outputs 5V signals.
+| RJ-12 Pin | Label | ESP32-C6 | Notes |
+|-----------|-------|----------|-------|
+| 2 | GND | GND | Common ground (REQUIRED) |
+| 3 | DTX | GPIO17 (RX) | Via 1kΩ + 2kΩ voltage divider |
+| 4 | VCC | VIN (5V) | Powers the ESP32 from desk |
+| 5 | HTX | GPIO18 (TX) | Direct connection — 3.3V is fine |
+
+**Parts needed:** 1× 1kΩ resistor, 1× 2kΩ resistor (or 2× 1kΩ in series)
+
+#### Why the Voltage Divider?
+
+The desk sends data at **5V**. The ESP32-C6 GPIOs are rated for **3.3V max**.
+Without a divider, 5V goes straight into a 3.3V pin — this will damage the chip.
+
+Two resistors drop the voltage: `5V × 2kΩ / (1kΩ + 2kΩ) = 3.33V` ✅
+
+The TX line (ESP32→desk) doesn't need this because the ESP32 outputs 3.3V,
+which the desk's 5V logic reads as HIGH (above the ~2.5V threshold).
+
+> ⚠️ **Never connect USB and desk 5V at the same time** — this back-powers
+> the USB host. Disconnect the RJ-12 before plugging in USB, or use OTA
+> for all updates after the first upload.
 >
-> - **RX line (desk→ESP32):** MUST use a voltage divider (1kΩ + 2kΩ gives ~3.3V) or a level shifter
-> - **TX line (ESP32→desk):** 3.3V output is accepted by the desk's 5V logic (above V<sub>IH</sub> threshold)
-> - **Never connect desk 5V directly to ESP32 GPIO — it will damage the chip**
+> **Current budget:** The desk provides ~300mA at 5V. The ESP32-C6 draws
+> ~120-180mA during WiFi activity — well within budget.
 
 ## Serial Signal Notes
 
