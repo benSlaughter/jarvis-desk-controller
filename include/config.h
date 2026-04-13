@@ -2,23 +2,23 @@
 #define CONFIG_H
 
 // WiFi
-#define WIFI_SSID "your-wifi-ssid"
-#define WIFI_PASS "your-wifi-password"
+#define WIFI_SSID "TheSprinkleHouse"
+#define WIFI_PASS "Tabl3T0p"
 
 // MQTT
-#define MQTT_HOST "192.168.1.100"
+#define MQTT_HOST "homeassistant.local"
 #define MQTT_PORT 1883
-#define MQTT_USER ""           // leave empty if no auth
-#define MQTT_PASS ""
+#define MQTT_USER "home-mosquitto"
+#define MQTT_PASS "mnb1kuh-ptr8eat-WUB"
 #define MQTT_CLIENT_ID "jarvis-desk"
 
 // Desk UART pins (ESP32-C6)
 #define DESK_RX_PIN 17   // ESP32 RX ← desk DTX (Beetle pin 13, GPIO17)
 #define DESK_TX_PIN 16   // ESP32 TX → desk HTX (Beetle pin 12, GPIO16)
-#define DESK_UART_NUM 1  // UART1
+#define DESK_UART_NUM 1
 
 // OTA
 #define OTA_HOSTNAME "jarvis-desk"
-#define OTA_PASSWORD ""  // leave empty to disable OTA password
+#define OTA_PASSWORD ""
 
 #endif
