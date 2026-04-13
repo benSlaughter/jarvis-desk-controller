@@ -20,6 +20,7 @@ static const char* TOPIC_STATUS       = "jarvis-desk/status";
 static const char* TOPIC_HEIGHT_STATE = "jarvis-desk/height/state";
 static const char* TOPIC_HEIGHT_SET   = "jarvis-desk/height/set";
 static const char* TOPIC_PRESET_SET   = "jarvis-desk/preset/set";
+static const char* TOPIC_PRESET_SAVE  = "jarvis-desk/preset/save";
 static const char* TOPIC_COMMAND      = "jarvis-desk/command";
 static const char* TOPIC_COLLISION    = "jarvis-desk/collision/set";
 
@@ -166,7 +167,29 @@ void publishDiscovery() {
         mqtt.publish(topicStr, buf, true);
     }
 
-    // 4. Up / Down / Stop buttons
+    // 4. Save Preset buttons
+    for (int i = 1; i <= 4; i++) {
+        JsonDocument doc;
+        char nameStr[24];
+        char uidStr[36];
+        char topicStr[72];
+        snprintf(nameStr, sizeof(nameStr), "Save Preset %d", i);
+        snprintf(uidStr, sizeof(uidStr), "jarvis_desk_save_preset_%d", i);
+        snprintf(topicStr, sizeof(topicStr), "homeassistant/button/jarvis_desk/save_preset_%d/config", i);
+
+        doc["name"] = nameStr;
+        doc["uniq_id"] = uidStr;
+        doc["cmd_t"] = TOPIC_PRESET_SAVE;
+        char payload[2];
+        snprintf(payload, sizeof(payload), "%d", i);
+        doc["pl_prs"] = payload;
+        doc["ic"] = "mdi:content-save";
+        addDeviceBlock(doc["dev"].to<JsonObject>());
+        serializeJson(doc, buf, sizeof(buf));
+        mqtt.publish(topicStr, buf, true);
+    }
+
+    // 5. Up / Down / Stop buttons
     struct { const char* name; const char* id; const char* payload; const char* icon; } buttons[] = {
         {"Raise",  "up",   "up",   "mdi:arrow-up"},
         {"Lower",  "down", "down", "mdi:arrow-down"},
@@ -214,6 +237,12 @@ void mqttCallback(char* topic, byte* payload, unsigned int length) {
         if (preset >= 1 && preset <= 4) {
             Serial.printf("> MQTT preset %d\n", preset);
             desk.moveToPreset((uint8_t)preset);
+        }
+    } else if (strcmp(topic, TOPIC_PRESET_SAVE) == 0) {
+        int preset = msg.toInt();
+        if (preset >= 1 && preset <= 4) {
+            Serial.printf("> MQTT save preset %d\n", preset);
+            desk.savePreset(preset);
         }
     } else if (strcmp(topic, TOPIC_COMMAND) == 0) {
         if (msg == "up") {
@@ -273,6 +302,7 @@ void handleMqtt() {
 
         mqtt.subscribe(TOPIC_HEIGHT_SET);
         mqtt.subscribe(TOPIC_PRESET_SET);
+        mqtt.subscribe(TOPIC_PRESET_SAVE);
         mqtt.subscribe(TOPIC_COMMAND);
         mqtt.subscribe(TOPIC_COLLISION);
 
