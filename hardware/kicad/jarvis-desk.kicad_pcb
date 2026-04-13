@@ -152,7 +152,7 @@
   (footprint "libs:Beetle_ESP32-C6"
     (layer "F.Cu")
     (uuid "e0000001-0001-4001-8001-000000000001")
-    (at 28 12.5 90)
+    (at 27 12.5 90)
     (property "Reference" "U1" (at 0 -3 0) (layer "F.SilkS") (uuid "e0000001-0001-4001-8001-100000000001") (effects (font (size 1 1) (thickness 0.15))))
     (property "Value" "Beetle_ESP32-C6" (at 0 3 0) (layer "F.Fab") (uuid "e0000001-0001-4001-8001-100000000002") (effects (font (size 1 1) (thickness 0.15))))
     (property "Footprint" "libs:Beetle_ESP32-C6" (at 0 0 0) (layer "F.Fab") (uuid "e0000001-0001-4001-8001-100000000003") (effects (font (size 1.27 1.27)) hide))
