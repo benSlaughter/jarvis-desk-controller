@@ -147,6 +147,24 @@ When you recalibrate the height on the handset, every height value shifts by the
 same offset. Physical limits, current height, all of it. But preset raw encoder
 values stay the same — they're hardware positions, not display values.
 
+No software offset needed — just calibrate via the handset and the protocol
+values automatically match reality.
+
+### Anti-Collision Sensitivity: Writable Over RJ-12
+
+We physically tested this. Set sensitivity to HIGH via `0x1D 0x01`, raised the desk,
+and pushed down with hand pressure — stopped easily at ~91cm. Set to LOW via
+`0x1D 0x03`, same test — needed full body weight to trigger it, and it still got
+to ~87cm before stopping.
+
+**Setter commands work over RJ-12**, even though we can't read the values back.
+The controller accepts and applies them immediately.
+
+| Sensitivity | Command | Force to stop |
+|-------------|---------|---------------|
+| HIGH | `0x1D 0x01` | Moderate hand pressure |
+| LOW | `0x1D 0x03` | Full body weight |
+
 ### Presets Are Raw Encoder Values
 
 The POS_1-4 responses are internal encoder tick counts, not display millimetres.
@@ -158,6 +176,29 @@ phord/Jarvis#21) but the exact scaling varies by controller.
 The SETTINGS command (0x07) is what the handset sends on boot. The controller
 wakes up and shows the brand logo. We're basically impersonating a handset.
 
+### Handset-Local Settings
+
+These don't go through the controller at all — no protocol traffic:
+- Lock/unlock
+- Screen brightness
+- Button brightness
+
+We confirmed this by running scan before and after toggling each one. Zero changes.
+
+## RJ-12 vs RJ-45 Capability
+
+| Feature | RJ-12 Read | RJ-12 Write | RJ-45 (per phord) |
+|---------|-----------|-------------|-------------------|
+| Height | ✅ | — | ✅ |
+| Presets | ✅ raw values | ✅ move + save | ✅ |
+| Physical limits | ✅ | — | ✅ |
+| User limits | ✅ | ✅ set + clear | ✅ |
+| Anti-collision | ❌ | ✅ confirmed | ✅ read + write |
+| Units | ❌ | ❌ | ✅ |
+| Memory mode | ❌ | Likely works | ✅ |
+| Goto height | — | ✅ (0x1B) | ✅ |
+| Stop | — | ✅ (0x2B) | ✅ |
+
 ## What's Still Unknown
 
 | Response | Our data | Best guess |
@@ -165,7 +206,7 @@ wakes up and shows the brand logo. We're basically impersonating a handset.
 | 0x05 (from 0x08) | FF FF or 00 06 | Error log? Resets on power cycle |
 | 0x06 (from 0x09) | 01 | Protocol version? |
 | 0x1C (from 0x1C) | 0x35 | Firmware version? |
-| HEIGHT P2 byte | always 0x0F | Capability flags? Model ID? No idea |
+| HEIGHT P2 byte | always 0x0F | Doesn't change with units, calibration, or any setting |
 
 ## Standing on the Shoulders of Giants
 
@@ -186,10 +227,10 @@ None of this would have been possible without:
 
 ## What's Next
 
+- Proper CLI commands for collision sensitivity, memory mode, units
 - ESP32 port for WiFi control
 - Home Assistant / MQTT integration
 - Sit/stand timer with reminders
-- Contributing these findings back to phord/Jarvis
 
 The code is a PlatformIO project with 47 unit tests. The research journal with
 raw packet captures is in `RESEARCH.md`.
