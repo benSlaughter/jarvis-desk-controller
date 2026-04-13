@@ -239,12 +239,43 @@ The touchpanel handset has these menu options. Mapping to known protocol command
 | Screen brightness | Handset-only (no protocol change detected) | 🖥️ Local |
 | Button brightness | Handset-only (no protocol change detected) | 🖥️ Local |
 | Memory preset mode | 0x19 (MEM_MODE) | Known |
-| Calibrate height | 0x91 (CALIBRATE) — DANGER | Known |
+| Calibrate height | 0x91 (CALIBRATE) — triggers RESET mode | Known |
 
-**New discovery:** Screen brightness and button brightness are completely
-undocumented in any source. These may use command codes in the unexplored
-ranges (0x10-0x18, 0x1A, 0x1E, 0x24, etc.) or may be handset-local settings
-that don't go through the controller.
+**Confirmed handset-local settings** (no protocol traffic, no scan changes):
+Lock/unlock, screen brightness, button brightness.
+
+### Experiment 5: Height Calibration (2026-04-13)
+
+Calibrated desk height from 76.5cm display → 74.4cm (to match tape measure).
+
+| Value | Before | After | Delta |
+|-------|--------|-------|-------|
+| HEIGHT | 0x0306 (77.4cm) | 0x02E8 (74.4cm) | **-21 (-2.1cm)** |
+| PHYS max | 0x04E5 (125.3cm) | 0x04D0 (123.2cm) | **-21** |
+| PHYS min | 0x02FD (76.5cm) | 0x02E8 (74.4cm) | **-21** |
+| POS_1–4 | unchanged | unchanged | 0 |
+| UNK_05 | FF FF | FF FF | 0 |
+| UNK_06 | 01 | 01 | 0 |
+| UNK_1C | 35 | 35 | 0 |
+| UNK_1F | 00 | 00 | 0 |
+| HEIGHT P2 | 0x0F | 0x0F | 0 |
+
+**Key findings:**
+1. **Calibration shifts all height values uniformly** — same -21 offset applied
+   to current height, physical max, and physical min
+2. **Preset raw encoder values are NOT affected** — they're truly hardware-level
+   encoder positions, independent of the display calibration offset
+3. **No software offset needed in firmware** — calibrate via the handset and the
+   protocol values automatically reflect real-world heights
+4. **RESET mode (0x40)** is sent repeatedly during calibration — the desk goes to
+   its lowest position to establish the reference point
+5. **HEIGHT P2 byte still unchanged** — not affected by calibration either
+
+**Calibration process observed:**
+1. Desk enters RESET mode (display shows "RESET", sends 0x40 responses)
+2. Desk moves to absolute lowest position
+3. Height reports resume with new calibrated values
+4. PHYS_LIMITS update to reflect new offset
 
 ---
 
